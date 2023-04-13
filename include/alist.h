@@ -1,6 +1,28 @@
 #ifndef HEADER_770a4049_20c5_4e21_8946_edb5f890c033
 #define HEADER_770a4049_20c5_4e21_8946_edb5f890c033
 
+/**
+ * This abstract data type implements list. AList stands for array list.
+ *
+ * Example
+ * -------
+ *
+ * AList list;
+ * AListCreate(&list, sizeof(const char*), 0);
+ *
+ * AListAppend(&list, "foo");
+ * AListAppend(&list, "bar");
+ *
+ * int i;
+ * for (i = 0; i < AListLength(&list); i++) {
+ *   const char* s;
+ *   AListGet(&list, i, &s);
+ *   printf("%d -> %s\n", i, s);
+ * }
+ * AListClear(&list);
+ */
+
+
 typedef struct {
   void* dummy[4];
 } AList;
@@ -53,6 +75,11 @@ void AListTruncate(AList* list, int n);
  * Returns the number of elements in <list>.
  */
 int AListLength(AList* list);
+
+/**
+ * Returns the size of an element in the list.
+ */
+int AListElementSize(AList* list);
 
 /**
  * Appends an element to the end of <list>. For this <element_size> (see AListCreate)

@@ -83,6 +83,13 @@ int AListLength(AList* list)
   return l->elements_count;
 }
 
+int AListElementSize(AList* list)
+{
+  assert(list != NULL);
+  struct AList* l = (struct AList*) list;
+  return l->element_size;
+}
+
 void* AListAppend(AList* list, void* element)
 {
   assert(list != NULL);
