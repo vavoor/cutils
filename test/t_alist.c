@@ -91,7 +91,7 @@ void append_many(void* pt)
   AListClear(&al);
 }
 
-main()
+int main()
 {
   UT_start("Array list tests", _UT_FLAGS_NONE);
   UT_RUN(new_alist_is_empty, NULL);
