@@ -1,6 +1,7 @@
 #include "ut.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "hmap.h"
 
@@ -113,7 +114,7 @@ void test_symbolmap(void* pt)
   HMapClear(&map);
 }
 
-int main()
+int main(int argc, const char* argv[])
 {
   UT_start("Hash table test", _UT_FLAGS_NONE);
   UT_RUN(test_creation, NULL);
