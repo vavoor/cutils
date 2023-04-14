@@ -81,14 +81,27 @@ void* HMapGetValue(HMap* map, int i, void* element);
 
 /**
  * Inserts a key-value pair into the hash table.
- * Returns 1 if the element has been inserted or 0 if it has been overwritten.
+ * Returns the index of the element that has been inserted or overwritten.
  */
 int HMapPut(HMap* map, const char* key, void* element);
 
 /**
+ * Inserts a key-value pair into the hash table. On return, <overwritten> reflects
+ * whether the element has already been in the hash table is was overwritten.
+ * Returns the index of the element that has been inserted or overwritten.
+ */
+int HMapPut2(HMap* map, const char* key, void* element, int* overwritten);
+
+/**
+ * Inserts a key-value pair into the hash table unless the key is already present.
+ * Returns the index of the inserted element or -1 if it has not been inserted.
+ */
+int HMapPutUnlessPresent(HMap* map, const char* key, void* element);
+
+/**
  * Looks up the element associated with <key> in the hash table.
- * Returns the index or -1 if not found. If found, element is filled
- * with value.
+ * Returns the index or -1 if not found. If found, <element> is filled
+ * with value. If not found, <element> is left unchanged.
  */
 int HMapFind(HMap* map, const char* key, void* element);
 
