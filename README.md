@@ -3,6 +3,7 @@
 This is a collection of utilities for the C programming language:
 
 - UT - A simple unit test framework
+- Err - Simple error reporting functions
 - AList - An array list implementation
 - HMap - A hash map implementation
 
@@ -27,3 +28,7 @@ For examples and usage description, look at `alist.h`.
 ### HMap - A hash map implementation
 
 For examples and usage description, look at `hmap.h`.
+
+### Err - Simple error reporting functions
+
+For examples and usage description, look at `err.h`.
