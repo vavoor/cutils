@@ -12,8 +12,8 @@ tst: lib/cutils.a
 clean:;
 	rm -rf obj/* lib/*
 
-lib/cutils.a: obj/alist.o obj/hmap.o obj/err.o
-	$(AR) -rsc lib/cutils.a obj/alist.o obj/hmap.o obj/err.o
+lib/cutils.a: obj/alist.o obj/hmap.o obj/err.o obj/futils.o
+	$(AR) -rsc lib/cutils.a obj/alist.o obj/hmap.o obj/err.o obj/futils.o
 
 obj/alist.o: src/alist.c include/alist.h
 	$(CC) $(CFLAGS) -c -o obj/alist.o src/alist.c
@@ -23,3 +23,6 @@ obj/hmap.o: src/hmap.c include/hmap.h include/alist.h
 
 obj/err.o: src/err.c include/err.h
 	$(CC) $(CFLAGS) -c -o obj/err.o src/err.c
+
+obj/futils.o: src/futils.c include/futils.h
+	$(CC) $(CFLAGS) -c -o obj/futils.o src/futils.c
