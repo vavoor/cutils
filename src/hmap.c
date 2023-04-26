@@ -92,7 +92,7 @@ exit:
   return found;
 }
 
-static void grow2(struct _HMap* m)
+static void rehash(struct _HMap* m)
 {
   //~ fprintf(stderr, "Rehashing (%d)\n", m->hash_capacity);
   m->hash_capacity = m->hash_capacity < 1024 ? 1024 : 2 * m->hash_capacity;
@@ -117,7 +117,7 @@ static void grow(struct _HMap* m)
 {
   int limit = m->hash_capacity / 2 + m->hash_capacity / 4 + m->hash_capacity / 8;
   if (AListLength(&m->elements) >= limit) {
-    grow2(m);
+    rehash(m);
   }
 }
 
