@@ -94,7 +94,8 @@ exit:
 
 static void grow(struct _HMap* m)
 {
-  if (m->hash_capacity <= 1.375 * AListLength(&m->elements)) {
+  int limit = m->hash_capacity / 2 + m->hash_capacity / 4 + m->hash_capacity / 8;
+  if (AListLength(&m->elements) >= limit) {
     //~ fprintf(stderr, "Rehashing (%d)\n", m->hash_capacity);
     m->hash_capacity = m->hash_capacity < 1024 ? 1024 : 2 * m->hash_capacity;
     free(m->hash_map);
