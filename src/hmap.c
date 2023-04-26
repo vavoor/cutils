@@ -92,27 +92,32 @@ exit:
   return found;
 }
 
+static void grow2(struct _HMap* m)
+{
+  //~ fprintf(stderr, "Rehashing (%d)\n", m->hash_capacity);
+  m->hash_capacity = m->hash_capacity < 1024 ? 1024 : 2 * m->hash_capacity;
+  free(m->hash_map);
+  m->hash_map = malloc(m->hash_capacity * sizeof(int));
+  assert(m->hash_map != NULL);
+
+  int i;
+  for (i = 0; i < m->hash_capacity; i++) {
+    m->hash_map[i] = -1;
+  }
+
+  int len = AListLength(&m->elements);
+  for (i = 0; i < len; i++) {
+    struct Element* e = AListGet(&m->elements, i, NULL);
+    int slot = find_free_slot(m, e->hash);
+    m->hash_map[slot] = i;
+  }
+}
+
 static void grow(struct _HMap* m)
 {
   int limit = m->hash_capacity / 2 + m->hash_capacity / 4 + m->hash_capacity / 8;
   if (AListLength(&m->elements) >= limit) {
-    //~ fprintf(stderr, "Rehashing (%d)\n", m->hash_capacity);
-    m->hash_capacity = m->hash_capacity < 1024 ? 1024 : 2 * m->hash_capacity;
-    free(m->hash_map);
-    m->hash_map = malloc(m->hash_capacity * sizeof(int));
-    assert(m->hash_map != NULL);
-
-    int i;
-    for (i = 0; i < m->hash_capacity; i++) {
-      m->hash_map[i] = -1;
-    }
-
-    int len = AListLength(&m->elements);
-    for (i = 0; i < len; i++) {
-      struct Element* e = AListGet(&m->elements, i, NULL);
-      int slot = find_free_slot(m, e->hash);
-      m->hash_map[slot] = i;
-    }
+    grow2(m);
   }
 }
 
