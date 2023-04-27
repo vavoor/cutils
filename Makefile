@@ -8,6 +8,7 @@ tst: lib/cutils.a
 	$(CC) $(CFLAGS) -g -o test/t_alist.bin test/t_alist.c lib/cutils.a && test/t_alist.bin
 	$(CC) $(CFLAGS) -g -o test/t_hmap.bin test/t_hmap.c lib/cutils.a && test/t_hmap.bin
 	$(CC) $(CFLAGS) -g -o test/t_err.bin test/t_err.c lib/cutils.a && test/t_err.bin
+	$(CC) $(CFLAGS) -g -o test/t_futils.bin test/t_futils.c lib/cutils.a && test/t_futils.bin
 
 clean:;
 	rm -rf obj/* lib/*

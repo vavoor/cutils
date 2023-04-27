@@ -5,35 +5,50 @@
 
 #include "futils.h"
 
-int FUReadFile(const char* fname, char** content)
+int FUReadFile(const char* fname, int max_size, int flags, char** content)
 {
   assert(content != NULL);
   assert(fname != NULL);
+
+  max_size = max_size < 0 ? (1<<20) : max_size;
 
   int size = -1;
   char* buffer = NULL;
 
   FILE* f = fopen(fname, "r");
+  if (f == NULL) {
+    goto exit;
+  }
+
+  fseek(f, 0, SEEK_END);
+  int n = ftell(f);
+
+  if (n < 0) {
+    goto exit;
+  }
+
+  if ((flags & FU_FLAGS_IGNORE_LARGE_FILES) && (max_size > 0) && (n > max_size)) {
+    goto exit;
+  }
+
+  rewind(f);
+
+  int to_read = (max_size > 0) && (n > max_size) ? max_size : n;
+  buffer = malloc(to_read + 1);
+  assert(buffer != NULL);
+
+  size = fread(buffer, 1, to_read, f);
+  if (size < 0) {
+    free(buffer);
+    buffer = NULL;
+    size = -1;
+    goto exit;
+  }
+
+  buffer[size] = '\0';
+
+exit:
   if (f != NULL) {
-    fseek(f, 0, SEEK_END);
-    int n = ftell(f);
-    if (0 <= n && n < (1<<20)) {
-      buffer = malloc(n + 1);
-      assert(buffer != NULL);
-      rewind(f);
-      size = fread(buffer, 1, n, f);
-      //~ if (size != n) {
-        //~ fprintf(stderr, "%s: expecting %d bytes but could read only %d\n", fname, n, size);
-      //~ }
-      if (size <= 0) {
-        free(buffer);
-        buffer = NULL;
-        size = -1;
-      }
-      else {
-        buffer[size] = '\0';
-      }
-    }
     fclose(f);
   }
   *content = buffer;
