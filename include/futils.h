@@ -7,11 +7,14 @@
 /**
  * Read the contents of the file <fname> into memory as null-terminated
  * string. Memory is allocated and returned in <content>. It needs to be
- * deallocated by the client.
+ * deallocated by the client. At most, <max_size> bytes are read from the file.
  *
- * max_size < 0 : default max size (1 MiB)
- * max_size == 0 : no limit
- * max_size > 0 : specified limit
+ * If FU_FLAGS_IGNORE_LARGE_FILES is set, files larger than <max_size> are
+ * ignored and -1 is returned.
+ *
+ * If ...
+ *   max_size < 0 : max_size is set to the default max size (1 MiB)
+ *   max_size == 0 : the file size is not limited
  *
  * Returns strlen() of the file content. In case of error, -1 is returned
  * and <content> is set to NULL.
