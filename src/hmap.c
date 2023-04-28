@@ -135,6 +135,8 @@ HMap* HMapCreate(HMap* map, int element_size)
   AListCreate(&m->elements, sizeof(struct Element) + element_size, 0);
   m->hash_capacity = 0;
   m->hash_map =  NULL;
+
+  return (HMap*) m;
 }
 
 void HMapClear(HMap* map)

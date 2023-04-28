@@ -1,5 +1,5 @@
-CFLAGS= -g -I include
-CC= gcc
+CFLAGS=-O3  -g -I include
+CC=clang
 AR= ar
 
 all: lib/cutils.a
