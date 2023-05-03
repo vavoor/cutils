@@ -12,12 +12,13 @@ tst: lib/cutils.a
 	$(CC) $(CFLAGS) -g -o test/t_err.bin test/t_err.c lib/cutils.a && test/t_err.bin
 	$(CC) $(CFLAGS) -g -o test/t_futils.bin test/t_futils.c lib/cutils.a && test/t_futils.bin
 	$(CC) $(CFLAGS) -g -o test/t_llist.bin test/t_llist.c lib/cutils.a && test/t_llist.bin
+	$(CC) $(CFLAGS) -g -o test/t_template.bin test/t_template.c lib/cutils.a && test/t_template.bin
 
 clean:;
 	rm -rf obj/* lib/*
 
-lib/cutils.a: obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o
-	$(AR) -rsc lib/cutils.a obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o
+lib/cutils.a: obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o
+	$(AR) -rsc lib/cutils.a obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o
 
 obj/alist.o: src/alist.c include/alist.h
 	$(CC) $(CFLAGS) -c -o obj/alist.o src/alist.c
@@ -33,3 +34,6 @@ obj/futils.o: src/futils.c include/futils.h
 
 obj/llist.o: src/llist.c include/llist.h
 	$(CC) $(CFLAGS) -c -o obj/llist.o src/llist.c
+
+obj/template.o: src/template.c include/template.h
+	$(CC) $(CFLAGS) -c -o obj/template.o src/template.c
