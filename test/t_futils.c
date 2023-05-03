@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 void test_loading_small_file(void* pt)
 {
@@ -60,7 +61,7 @@ void test_loading_large_file(void* pt)
   remove(fname);
 }
 
-main()
+int main()
 {
   UT_start("futils", _UT_FLAGS_NONE);
   UT_RUN(test_loading_small_file, NULL);
