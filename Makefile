@@ -1,4 +1,4 @@
-CFLAGS=-O3  -g -I include
+CFLAGS=-O3 -g -I include
 #CFLAGS=-g -I include
 CC=clang
 #CC=gcc
