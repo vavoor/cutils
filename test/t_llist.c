@@ -1,5 +1,6 @@
 #include "ut.h"
 #include "llist.h"
+#include <stdlib.h>
 
 
 static void test_creation(void* pt)
@@ -75,6 +76,58 @@ static void test_iterating(void* pt)
   LListClear(&list);
 }
 
+static void test_iteration_pattern1(void* pt)
+{
+  LList* list = LListCreate(NULL, sizeof(double));
+  LListClear(list);
+
+  double d;
+  int i;
+  for (i = 0; i < 10; i++) {
+    d = (double) -i;
+    LListAppend(list, &d);
+  }
+
+  LListIt it;
+  i = 0;
+  for (LListFirst(list, &it); !LListEol(&it); LListNext(&it)) {
+    double el;
+    LListGet(&it, &el);
+    UT_expect(el == (double) -i, "%d expected", -i);
+    i++;
+  }
+
+  LListClear(list);
+  free(list);
+}
+
+static void test_iteration_pattern2(void* pt)
+{
+  LList* list = LListCreate(NULL, sizeof(double));
+  LListClear(list);
+
+  double d;
+  int i;
+  for (i = 0; i < 10; i++) {
+    d = (double) -i;
+    LListAppend(list, &d);
+  }
+
+  LListIt it;
+  i = 0;
+  double* ep = LListFirst(list, &it);
+  UT_expect(*ep == (double) -i, "%d expected", -i);
+  i++;
+  while (ep != NULL) {
+    ep = LListNext(&it);
+    UT_expect(ep == NULL || *ep == (double) -i, "%d expected", -i);
+    i++;
+  }
+
+  LListClear(list);
+  free(list);
+}
+
 int main()
 {
   UT_start("Linked List", _UT_FLAGS_NONE);
@@ -82,6 +135,8 @@ int main()
   UT_RUN1(test_creation);
   UT_RUN1(test_appending);
   UT_RUN1(test_iterating);
+  UT_RUN1(test_iteration_pattern1);
+  UT_RUN1(test_iteration_pattern2);
 
   return UT_end();
 }

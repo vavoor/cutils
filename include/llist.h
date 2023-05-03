@@ -42,6 +42,19 @@ typedef struct {
 /**
  * Creates an interator for the linked list.
  * Returns the pointer to the first element of the list.
+ *
+ * LListIt it;
+ * for (LListFirst(list, &it); !LListEol(&it); LListNext(&it)) {
+ *   LListGet(&it, &element)
+ *   ...
+ * }
+ *
+ * LList it;
+ * ep = LListFirst(list, &it);
+ * while (ep != NULL) {
+ *   ...
+ *   ep = LListNext(&it);
+ * }
  */
 void* LListFirst(LList* list, LListIt* it);
 
