@@ -60,6 +60,9 @@
  * and used the name of the test function also as test name. I.e. UT_RUN(x, y) is the same
  * as UT_run("x", x, y).
  *
+ * The macro UT_RUN1(test_function) is the same as UT_RUN except that pass_through
+ * is set to NULL.
+ *
  * A test function reports test results with UT_expect or UT_fail:
  *
  * void UT_fail(const char* msg, ...)
@@ -162,5 +165,6 @@ static void UT_run(const char* name, void (*test)(void*), void* pass_through)
   }
 }
 #define UT_RUN(NAME, PASS_THROUGH) UT_run(#NAME, NAME, (PASS_THROUGH))
+#define UT_RUN1(NAME) UT_run(#NAME, NAME, NULL)
 
 #endif /* HEADER_22bf4689_c2e1_4622_9adb_07746882f399 */
