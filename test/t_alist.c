@@ -18,7 +18,7 @@ void new_alist_is_empty(void* pt)
 
   lp = AListCreate(NULL, sizeof(struct Element), 0);
   UT_expect(AListLength(lp) == 0, "New AList (allocated) has length 0");
-  AListClear(lp);
+  AListClear2(lp);
   free(lp);
 }
 
@@ -39,7 +39,7 @@ void appending(void* pt)
   UT_expect(e.a == 1234, "AListGet copies previously inserted");
   UT_expect(ep->a == 1234, "AListGet returns element previously inserted");
 
-  AListClear(&al);
+  AListClear2(&al);
 }
 
 void truncate(void* pt)
@@ -66,7 +66,7 @@ void truncate(void* pt)
   UT_expect(((struct Element*)AListGet(&al, 0, NULL))->a == 0, "expecting 0");
   UT_expect(((struct Element*)AListGet(&al, -1, NULL))->a == 99, "expecting 99");
 
-  AListClear(&al);
+  AListClear2(&al);
 
 }
 
@@ -88,7 +88,7 @@ void append_many(void* pt)
     struct Element* ep = AListGet(&al, i, NULL);
     UT_expect(ep->a == i, "same value as inserted");
   }
-  AListClear(&al);
+  AListClear2(&al);
 }
 
 int main()

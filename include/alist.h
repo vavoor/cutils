@@ -27,6 +27,9 @@ typedef struct {
   void* dummy[4];
 } AList;
 
+typedef int (*AListOp)(int index, void* element, void* pass_through);
+
+
 /**
  * Creates an array list for elements of size <element_size> with an
  * initial capacity to hold <capacity> elements in the variable <list>
@@ -51,10 +54,17 @@ AList* AListCreate(AList* list, int element_size, int capacity);
 AList* AListMove(AList* target, AList* source);
 
 /**
+ * Calls <free_op> for each element in the list, if non-NULL and truncates
+ *  the length of <list> to length zero and releases internally
+ * allocated memory.
+ */
+void AListClear(AList* list, AListOp free_op, void* pass_through);
+
+/**
  * Truncates the length of <list> to length zero and releases internally
  * allocated memory.
  */
-void AListClear(AList* list);
+void AListClear2(AList* list);
 
 /**
  * Truncates the length of <list> to length <n>, if <n> is positive and less
@@ -128,7 +138,6 @@ void* AListSet(AList* list, int i, void* element);
  *
  * If <operation> returns non-null, the iteration is aborted.
  */
-typedef int (*AListOp)(int index, void* element, void* pass_through);
 void AListForAll(AList* list, AListOp operation, void* pass_through);
 
 #endif /* HEADER_770a4049_20c5_4e21_8946_edb5f890c033 */

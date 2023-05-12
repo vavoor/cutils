@@ -51,16 +51,29 @@ AList* AListMove(AList* target, AList* source)
   return (AList*) lt;
 }
 
-void AListClear(AList* list)
+void AListClear(AList* list, AListOp free_op, void* pass_through)
 {
   assert(list != NULL);
   struct AList* l = (struct AList*) list;
+
+  if (free_op != NULL) {
+    int i;
+    for (i = 0; i < l->elements_count; i++) {
+      void* p = l->elements + l->element_size * i;
+      free_op(i, p, pass_through);
+    }
+  }
 
   free(l->elements);
   l->elements = NULL;
 
   l->elements_count = 0;
   l->capacity = 0;
+}
+
+void AListClear2(AList* list)
+{
+  AListClear(list, NULL, NULL);
 }
 
 void AListTruncate(AList* list, int n)

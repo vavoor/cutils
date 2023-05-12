@@ -149,7 +149,7 @@ void HMapClear(HMap* map)
     struct Element* e = AListGet(&m->elements, i, NULL);
     free((void*)e->key);
   }
-  AListClear(&m->elements);
+  AListClear2(&m->elements);
   free(m->hash_map);
   m->hash_map = NULL;
   m->hash_capacity = 0;
