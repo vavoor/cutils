@@ -11,7 +11,7 @@ static void test_creation(void* pt)
   UT_expect(LListLength(&list) == 0, "New list is empty");
   UT_expect(LListElementSize(&list) == sizeof(double), "List can store doubles");
 
-  LListClear(&list);
+  LListClear2(&list);
   UT_expect(LListLength(&list) == 0, "Cleared list is empty");
   UT_expect(LListElementSize(&list) == sizeof(double), "Cleared list still can store doubles");
 }
@@ -33,7 +33,7 @@ static void test_appending(void* pt)
   UT_expect(LListLength(list) == 2, "Two element in list");
   UT_expect(*dp == d, "Element is in list");
 
-  LListClear(list);
+  LListClear2(list);
   UT_expect(LListLength(list) == 0, "Cleared list is empty");
 }
 
@@ -73,13 +73,13 @@ static void test_iterating(void* pt)
   }
   UT_expect(i == N, "Iterated over %d elements", N);
 
-  LListClear(&list);
+  LListClear2(&list);
 }
 
 static void test_iteration_pattern1(void* pt)
 {
   LList* list = LListCreate(NULL, sizeof(double));
-  LListClear(list);
+  LListClear2(list);
 
   double d;
   int i;
@@ -97,14 +97,14 @@ static void test_iteration_pattern1(void* pt)
     i++;
   }
 
-  LListClear(list);
+  LListClear2(list);
   free(list);
 }
 
 static void test_iteration_pattern2(void* pt)
 {
   LList* list = LListCreate(NULL, sizeof(double));
-  LListClear(list);
+  LListClear2(list);
 
   double d;
   int i;
@@ -124,7 +124,7 @@ static void test_iteration_pattern2(void* pt)
     i++;
   }
 
-  LListClear(list);
+  LListClear2(list);
   free(list);
 }
 

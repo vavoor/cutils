@@ -5,6 +5,8 @@ typedef struct {
   void* dummy[4];
 } LList;
 
+typedef int (*LListOp)(int index, void* element, void* pass_through);
+
 /**
  * Creates a linked list for elements of size <element_size>. If <list> is
  * non-null, this memory is initialized as LList. If <list> is NULL, a
@@ -15,9 +17,15 @@ typedef struct {
 LList* LListCreate(LList* list, int element_size);
 
 /**
+ * Calls <free_op> for each element in the list if non-NULL and removes
+ * all elements from the linked list.
+ */
+void LListClear(LList* list, LListOp free_op, void* pass_through);
+
+/**
  * Removes all elements from the linked list.
  */
-void LListClear(LList* list);
+void LListClear2(LList* list);
 
 /**
  * Returns the number of elements in the linked list.
@@ -82,7 +90,6 @@ void* LListGet(LListIt* it, void* element);
  *
  * If <operation> returns non-null, the iteration is aborted.
  */
-typedef int (*LListOp)(int index, void* element, void* pass_through);
 void LListForAll(LList* list, LListOp operation, void* pass_through);
 
 #endif /* HEADER_980ec707_9071_4a62_bb35_30212c45851e */

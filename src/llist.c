@@ -40,20 +40,30 @@ LList* LListCreate(LList* list, int element_size)
   return (LList*) l;
 }
 
-void LListClear(LList* list)
+void LListClear(LList* list, LListOp free_op, void* pass_through)
 {
   assert(list != NULL);
   struct _LList* l = (struct _LList*) list;
 
+  int i = 0;
   struct Element* e = l->first;
   while (e != NULL) {
     struct Element* n = e->next;
+    if (free_op != NULL) {
+      free_op(i, e->data, pass_through);
+    }
     free(e);
+    i++;
     e = n;
   }
 
   l->elements_count = 0;
   l->first = l->last = NULL;
+}
+
+void LListClear2(LList* list)
+{
+  LListClear(list, NULL, NULL);
 }
 
 int LListLength(LList* list)
