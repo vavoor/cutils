@@ -161,3 +161,14 @@ void* AListSet(AList* list, int i, void* element)
 
   return p;
 }
+
+void AListForAll(AList* list, AListOp operation, void* pass_through)
+{
+  int n = AListLength(list);
+  int i;
+  for (i = 0; i < n; i++) {
+    if (operation(i, AListGet(list, i, NULL), pass_through)) {
+      break;
+    }
+  }
+}

@@ -121,4 +121,14 @@ void* AListGet(AList* list, int i, void* element);
  */
 void* AListSet(AList* list, int i, void* element);
 
+
+/**
+ * Apply the <operation> on each element in the <list> passing the index of the
+ * element (0, 1, 2, ...), a pointer to the element in the list, and <pass_through>.
+ *
+ * If <operation> returns non-null, the iteration is aborted.
+ */
+typedef int (*AListOp)(int index, void* element, void* pass_through);
+void AListForAll(AList* list, AListOp operation, void* pass_through);
+
 #endif /* HEADER_770a4049_20c5_4e21_8946_edb5f890c033 */
