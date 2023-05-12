@@ -76,4 +76,13 @@ void* LListNext(LListIt* it);
  */
 void* LListGet(LListIt* it, void* element);
 
+/**
+ * Apply the <operation> on each element in the <list> passing the index of the
+ * element (0, 1, 2, ...), a pointer to the element in the list, and <pass_through>.
+ *
+ * If <operation> returns non-null, the iteration is aborted.
+ */
+typedef int (*LListOp)(int index, void* element, void* pass_through);
+void LListForAll(LList* list, LListOp operation, void* pass_through);
+
 #endif /* HEADER_980ec707_9071_4a62_bb35_30212c45851e */

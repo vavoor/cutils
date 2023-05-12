@@ -128,6 +128,37 @@ static void test_iteration_pattern2(void* pt)
   free(list);
 }
 
+static int add(int i, void* element, void* pt)
+{
+  double* e = (double*) element;
+  double* sum = (double*) pt;
+
+  *sum += *e;
+
+  return 0;
+}
+
+static void test_for_all(void* pt)
+{
+  LList list;
+  LListCreate(&list, sizeof(double));
+
+  const int N =100;
+  int i;
+
+  double sum = 0.0;
+  double value;
+  for (i = 0; i < N; i++) {
+    value = (double) i;
+    sum += value;
+    LListAppend(&list, &value);
+  }
+
+  value = 0.0;
+  LListForAll(&list, add, &value);
+  UT_expect(value == sum, "Sum of elements is %g", sum);
+}
+
 int main()
 {
   UT_start("Linked List", _UT_FLAGS_NONE);
@@ -137,6 +168,7 @@ int main()
   UT_RUN1(test_iterating);
   UT_RUN1(test_iteration_pattern1);
   UT_RUN1(test_iteration_pattern2);
+  UT_RUN1(test_for_all);
 
   return UT_end();
 }

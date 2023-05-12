@@ -147,3 +147,14 @@ void* LListGet(LListIt* it, void* element)
 
   return i->element != NULL ? i->element->data : NULL;
 }
+
+void LListForAll(LList* list, LListOp operation, void* pass_through)
+{
+  LListIt it;
+  int i;
+  for (i = 0, LListFirst(list, &it); !LListEol(&it); LListNext(&it), i++) {
+    if (operation(i, LListGet(&it, NULL), pass_through)) {
+      break;
+    }
+  }
+}
