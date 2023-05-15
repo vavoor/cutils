@@ -55,7 +55,7 @@ exit:
   return size;
 }
 
-int FUEscapeChar(int c, char* out)
+int FUEscapeCChar(int c, char* out)
 {
   assert(0 <= c && c < 256);
   int len = 2;
@@ -106,4 +106,73 @@ int FUEscapeChar(int c, char* out)
   }
 
   return len;
+}
+
+int FUEscapeJSONChar(int c, char* out)
+{
+  assert(0 <= c && c < 256);
+  int len = 2;
+
+  switch (c) {
+    case '\b':
+      strcpy(out, "\\b");
+      break;
+
+    case '\n':
+      strcpy(out, "\\n");
+      break;
+
+    case '\t':
+      strcpy(out, "\\t");
+      break;
+
+    case '\f':
+      strcpy(out, "\\f");
+      break;
+
+    case '\r':
+      strcpy(out, "\\r");
+      break;
+
+    //~ case '\'':
+      //~ strcpy(out, "\\\'");
+      //~ break;
+
+    case '\"':
+      strcpy(out, "\\\"");
+      break;
+
+    case '\\':
+      strcpy(out, "\\\\");
+      break;
+
+    default:
+      if ((0 <= c && c < ' ') || (128 <= c && c < 256)) {
+        len = sprintf(out, "\\x%2.2X", c);
+      }
+      else {
+        *out++ = c;
+        *out = '\0';
+        len = 1;
+      }
+      break;
+  }
+
+  return len;
+}
+
+int FUEscapeStr(const char* s, int (*formatter)(int, char*), char* out)
+{
+  assert(s != NULL);
+  assert(out != NULL);
+
+  const char* in = s;
+  char* o = out;
+
+  while (*in != '\0') {
+    o += formatter(*in, o);
+    in++;
+  }
+  *o = '\0';
+  return o - out;
 }

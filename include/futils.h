@@ -25,6 +25,12 @@ int FUReadFile(const char* fname, int max_size, int flags, char** content);
  * Write the escape character for <c> into <out> and return the number of
  * characters.
  */
-int FUEscapeChar(int c, char* out);
+int FUEscapeCChar(int c, char* out);
+int FUEscapeJSONChar(int c, char* out);
+
+/** Write the escaped characters from <s> into <out> and return the number
+ * of characters written. <out> is null-terminaned.
+ */
+int FUEscapeStr(const char* s, int (*formatter)(int, char*), char* out);
 
 #endif /* HEADER_a73c9785_73dd_4c9d_a7f4_bf47632c9749 */
