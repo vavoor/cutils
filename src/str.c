@@ -10,6 +10,7 @@ int StrEndsWith(const char* haystack, ... /* const char* needles */)
 
   va_list ap;
   va_start(ap, haystack);
+
   int found = 0;
   int len = strlen(haystack);
   const char* needle = va_arg(ap, const char*);
