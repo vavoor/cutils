@@ -4,6 +4,8 @@ CFLAGS=-O2 -g -I include
 CC=gcc
 AR= ar
 
+OBJ=obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o obj/str.o obj/json.o
+
 all: lib/cutils.a
 
 tst: lib/cutils.a
@@ -13,12 +15,13 @@ tst: lib/cutils.a
 	$(CC) $(CFLAGS) -g -o test/t_futils.bin test/t_futils.c lib/cutils.a && test/t_futils.bin
 	$(CC) $(CFLAGS) -g -o test/t_llist.bin test/t_llist.c lib/cutils.a && test/t_llist.bin
 	$(CC) $(CFLAGS) -g -o test/t_template.bin test/t_template.c lib/cutils.a && test/t_template.bin
+	$(CC) $(CFLAGS) -g -o test/t_json.bin test/t_json.c lib/cutils.a && test/t_json.bin
 
 clean:;
 	rm -rf obj/* lib/*
 
-lib/cutils.a: obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o obj/str.o
-	$(AR) -rsc lib/cutils.a obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o obj/str.o
+lib/cutils.a: $(OBJ)
+	$(AR) -rsc lib/cutils.a $(OBJ)
 
 obj/alist.o: src/alist.c include/alist.h
 	$(CC) $(CFLAGS) -c -o obj/alist.o src/alist.c
@@ -40,3 +43,6 @@ obj/template.o: src/template.c include/template.h
 
 obj/str.o: src/str.c include/str.h
 	$(CC) $(CFLAGS) -c -o obj/str.o src/str.c
+
+obj/json.o: src/json.c include/json.h
+	$(CC) $(CFLAGS) -c -o obj/json.o src/json.c
