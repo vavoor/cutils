@@ -5,20 +5,18 @@
 static void single_string(void* pt)
 {
   JSON j;
-  char* s = strdup(" \"foo bar\"\n");
+  char s[] = " \"foo bar\"\n";
   JSONParse(&j, s);
   UT_expect(j.type == J_STRING, "j is a string");
   UT_expect(strcmp(j.string.value, "foo bar") == 0, "j is foo bar");
-  free(s);
 }
 
 static void single_object(void* pt)
 {
   JSON j;
-  char* s = strdup(" { \"foo\" : \"bar\",\n \"baz\" : [ 123, 0.34, {} ]  \n}\n");
+  char s[] = " { \"foo\" : \"bar\",\n \"baz\" : [ 123, 0.34, { \"xxx\":\n876 }, false, true ]  \n}\n";
   JSONParse(&j, s);
-  JSONDump(&j, JSONToFILE, stdout);
-  free(s);
+  JSONSerialize(&j, SerializeToFILE, stdout);
 }
 
 int main()

@@ -18,6 +18,8 @@ struct Element {
   int hash;
   char value[0];
 };
+#define ELEMENT_SIZE(N) (sizeof(struct Element) + (N))
+#define DATA_SIZE(EL) ((EL) - sizeof(struct Element))
 
 static int hash_function(const char* key)
 {
@@ -132,7 +134,7 @@ HMap* HMapCreate(HMap* map, int element_size)
     assert(m != NULL);
   }
 
-  AListCreate(&m->elements, sizeof(struct Element) + element_size, 0);
+  AListCreate(&m->elements, ELEMENT_SIZE(element_size), 0);
   m->hash_capacity = 0;
   m->hash_map =  NULL;
 
@@ -177,7 +179,7 @@ void* HMapGetValue(HMap* map, int i, void* element)
   struct Element* el = AListGet(&m->elements, i, NULL);
 
   if (element != NULL) {
-    memcpy(element, &el->value, AListElementSize(&m->elements) - sizeof(struct Element));
+    memcpy(element, &el->value, DATA_SIZE(AListElementSize(&m->elements)));
   }
 
   return &el->value;
@@ -199,7 +201,7 @@ int HMapPut2(HMap* map, const char* key, void* element, int* overwritten)
     /* key is already in the map */
     struct Element* e = AListGet(&m->elements, m->hash_map[slot], NULL);
     if (element != NULL) {
-      memcpy(&e->value, element, element_size - sizeof(struct Element));
+      memcpy(&e->value, element, DATA_SIZE(element_size));
     }
     *overwritten = 1;
   }
@@ -209,7 +211,7 @@ int HMapPut2(HMap* map, const char* key, void* element, int* overwritten)
     e->key = strdup(key);
     e->hash = hash;
     if (element != NULL) {
-      memcpy(&e->value, element, element_size - sizeof(struct Element));
+      memcpy(&e->value, element, DATA_SIZE(element_size));
     }
     int i = AListLength(&m->elements);
     AListAppend(&m->elements, e);
@@ -248,7 +250,7 @@ int HMapPutUnlessPresent(HMap* map, const char* key, void* element)
     e->key = strdup(key);
     e->hash = hash;
     if (element != NULL) {
-      memcpy(&e->value, element, element_size - sizeof(struct Element));
+      memcpy(&e->value, element, DATA_SIZE(element_size));
     }
     int i = AListLength(&m->elements);
     AListAppend(&m->elements, e);
@@ -270,7 +272,7 @@ int HMapFind(HMap* map, const char* key, void* element)
     /* key is found */
     if (element != NULL) {
       struct Element* e = AListGet(&m->elements, m->hash_map[slot], NULL);
-      memcpy(element, &e->value, AListElementSize(&m->elements) - sizeof(struct Element));
+      memcpy(element, &e->value, DATA_SIZE(AListElementSize(&m->elements)));
     }
     return m->hash_map[slot];
   }

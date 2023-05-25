@@ -48,10 +48,50 @@ void JSONObjectCreate(JSON* json)
   HMapCreate(&json->object.properties, sizeof(JSON));
 }
 
+void JSONObjectAddProperty(JSON* json, const char* name, JSON* value)
+{
+  assert(json->type == J_OBJECT);
+  int overwritten;
+  HMapPut2(&json->object.properties, name, value, &overwritten);
+  if (overwritten) {
+    // TODO error on duplicate property?
+  }
+}
+
 void JSONClear(JSON* json)
 {
-  // TODO
-  json->type = J_NONE;
+  if (json != NULL) {
+    int len;
+    int i;
+
+    switch (json->type) {
+    case J_OBJECT:
+      len = HMapLength(&json->object.properties);
+      for (i = 0; i < len; i++) {
+        JSON* j = HMapGetValue(&json->object.properties, i, NULL);
+        JSONClear(j);
+        HMapClear(&json->object.properties);
+      }
+      break;
+
+    case J_ARRAY:
+      len = AListLength(&json->array.elements);
+      for (i = 0; i < len; i++) {
+        JSON* j = AListGet(&json->array.elements, i, NULL);
+        JSONClear(j);
+        AListClear2(&json->array.elements);
+      }
+      break;
+
+    case J_NUMBER:
+      break;
+
+    case J_STRING:
+      free((void*)json->string.value);
+      break;
+    }
+    json->type = J_NONE;
+  }
 }
 
 void JSONArrayCreate(JSON* json)
@@ -60,6 +100,12 @@ void JSONArrayCreate(JSON* json)
 
   json->array.type = J_ARRAY;
   AListCreate(&json->array.elements, sizeof(JSON), 0);
+}
+
+void JSONArrayAppend(JSON* json, JSON* element)
+{
+  assert(json->type == J_ARRAY);
+  AListAppend(&json->array.elements, element);
 }
 
 void JSONStringCreate(JSON* json, const char* value)
@@ -76,6 +122,13 @@ void JSONNumberCreate(JSON* json, double value)
 
   json->number.type = J_NUMBER;
   json->number.value = value;
+}
+
+void JSONBooleanCreate(JSON* json, int value)
+{
+  assert(json != NULL);
+  json->boolean.type = J_BOOLEAN;
+  json->boolean.value = value;
 }
 
 
@@ -120,6 +173,25 @@ static int parse_number(JSON* json)
   return 1;
 }
 
+static int parse_boolean(JSON* json)
+{
+  if (strncasecmp(inp, "true", 4) == 0) {
+    JSONBooleanCreate(json, 1);
+    inp += 4;
+    skip_ws();
+    return 1;
+  }
+  else if (strncasecmp(inp, "false", 5) == 0) {
+    JSONBooleanCreate(json, 0);
+    inp += 5;
+    skip_ws();
+    return 1;
+  }
+  else {
+    return 0;
+  }
+}
+
 static int parse_value(JSON* value)
 {
   if (*inp == '{') {
@@ -135,7 +207,7 @@ static int parse_value(JSON* value)
     return parse_number(value);
   }
   else {
-    return 0;
+    return parse_boolean(value);
   }
 }
 
@@ -274,103 +346,138 @@ int JSONParse(JSON* json, const char* json_string)
   }
 }
 
-static void dump_value(JSON* json, void (*dump)(int c, void* pt), void* pt);
+static void dump_value(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent);
 
-static void dump_chars(const char* s, void (*dump)(int c, void* pt), void* pt)
+static void ind(int indent, void (*writer)(int c, void* pt), void* pt)
+{
+  int i;
+  for (i = 0; i < indent; i++) {
+    writer(' ', pt);
+    writer(' ', pt);
+  }
+}
+
+static void dump_chars(const char* s, void (*writer)(int c, void* pt), void* pt)
 {
   const char* p = s;
   while (*p != '\0') {
-    dump(*p, pt);
+    writer(*p, pt);
     p++;
   }
 }
 
-static void dump_number(JSON* json, void (*dump)(int c, void* pt), void* pt)
+static void dump_number(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
 {
-  assert(json->type == J_NUMBER);
   char scratch[100];
   sprintf(scratch, "%g", json->number.value);
-  dump_chars(scratch, dump, pt);
+  dump_chars(scratch, writer, pt);
 }
 
-static void dump_string(JSON* json, void (*dump)(int c, void* pt), void* pt)
+static void dump_string(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
 {
-  dump('\"', pt);
-  dump_chars(json->string.value, dump, pt);
-  dump('\"', pt);
+  writer('\"', pt);
+  dump_chars(json->string.value, writer, pt);
+  writer('\"', pt);
 }
 
-static void dump_array(JSON* json, void (*dump)(int c, void* pt), void* pt)
+static void dump_boolean(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
 {
-  dump_chars("[ ", dump, pt);
+  if (json->boolean.value) {
+    dump_chars("true", writer, pt);
+  }
+  else {
+    dump_chars("false", writer, pt);
+  }
+}
+
+static void dump_array(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
+{
+  writer('[', pt);
+  indent++;
+
   int len = AListLength(&json->array.elements);
   int i;
   for (i = 0; i < len; i++) {
     if (i > 0) {
-      dump_chars(", ", dump, pt);
+      writer(',', pt);
     }
+    writer('\n', pt);
     JSON* j = AListGet(&json->array.elements, i, NULL);
-    dump_value(j, dump, pt);
+    ind(indent, writer, pt);
+    dump_value(j, writer, pt, indent);
   }
-  dump_chars(" ]", dump, pt);
+  writer('\n', pt);
+  indent--;
+  ind(indent, writer, pt);
+  writer(']', pt);
 }
 
-static void dump_object(JSON* json, void (*dump)(int c, void* pt), void* pt)
+static void dump_object(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
 {
-  dump_chars("{ ", dump, pt);
+  writer('{', pt);
+  indent++;
 
   int len = HMapLength(&json->object.properties);
   int i;
   for (i = 0; i < len; i++) {
     if (i > 0) {
-      dump_chars(", ", dump, pt);
+      writer(',', pt);
     }
-    dump('\"', pt);
-    dump_chars(HMapGetKey(&json->object.properties, i), dump, pt);
-    dump('\"', pt);
-    dump_chars(" : ", dump, pt);
+    writer('\n', pt);
+    ind(indent, writer, pt);
+    writer('\"', pt);
+    dump_chars(HMapGetKey(&json->object.properties, i), writer, pt);
+    writer('\"', pt);
+    dump_chars(" : ", writer, pt);
     JSON* j = HMapGetValue(&json->object.properties, i, NULL);
-    dump_value(j, dump, pt);
+    dump_value(j, writer, pt, indent);
   }
-  dump_chars(" }", dump, pt);
+  writer('\n', pt);
+  indent--;
+  ind(indent, writer, pt);
+  writer('}', pt);
 }
 
-static void dump_value(JSON* json, void (*dump)(int c, void* pt), void* pt)
+static void dump_value(JSON* json, void (*writer)(int c, void* pt), void* pt, int indent)
 {
   assert(json != NULL);
 
   switch (json->type) {
   case J_NUMBER:
-    dump_number(json, dump, pt);
+    dump_number(json, writer, pt, indent);
     break;
 
   case J_STRING:
-    dump_string(json, dump, pt);
+    dump_string(json, writer, pt, indent);
     break;
 
   case J_ARRAY:
-    dump_array(json, dump, pt);
+    dump_array(json, writer, pt, indent);
     break;
 
   case J_OBJECT:
-    dump_object(json, dump, pt);
+    dump_object(json, writer, pt, indent);
+    break;
+
+  case J_BOOLEAN:
+    dump_boolean(json, writer, pt, indent);
     break;
   }
 }
 
-void JSONDump(JSON* json, void (*dump)(int c, void* pt), void* pt)
+void JSONSerialize(JSON* json, void (*writer)(int c, void* pt), void* pt)
 {
-  dump_value(json, dump, pt);
-  dump('\n', pt);
+  dump_value(json, writer, pt, 0);
+  writer('\n', pt);
 }
 
-void JSONToFILE(int c, void* pt)
+void SerializeToFILE(int c, void* pt)
 {
   FILE* out = (FILE*) pt;
   fputc(c, out);
 }
 
-void JSONToString(int c, void* pt)
+void SerializeToString(int c, void* pt)
 {
   char** s = (char**) pt;
   char* p = *s;

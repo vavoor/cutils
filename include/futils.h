@@ -28,8 +28,10 @@ int FUReadFile(const char* fname, int max_size, int flags, char** content);
 int FUEscapeCChar(int c, char* out);
 int FUEscapeJSONChar(int c, char* out);
 
-/** Write the escaped characters from <s> into <out> and return the number
- * of characters written. <out> is null-terminaned.
+/**
+ * Write the escaped characters from <s> using <formatter and return the number
+ * of characters written. <out> is null-terminaned. FUEscapeCChar or FUEscapeJSONChar
+ * can be used as formatters.
  */
 int FUEscapeStr(const char* s, int (*formatter)(int, char*), char* out);
 
