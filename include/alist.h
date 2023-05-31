@@ -135,9 +135,41 @@ typedef struct {
   void* dummy[2];
 } AListIt;
 
+/**
+ * Creates an interator for the array list.
+ * Returns the pointer to the first element of the list.
+ *
+ * AListIt it;
+ * for (AListFirst(list, &it); !AListEol(&it); AListNext(&it)) {
+ *   AListData(&it, &element)
+ *   ...
+ * }
+ *
+ * AList it;
+ * ep = AListFirst(list, &it);
+ * while (ep != NULL) {
+ *   ...
+ *   ep = AListNext(&it);
+ * }
+ */
 void* AListFirst(AList* list, AListIt* it);
-int ALIstEol(AListIt* it);
+
+/**
+ * Returns true if the iterator points beyond the end of the linked list.
+ */
+int AListEol(AListIt* it);
+
+/**
+ * Advantes the iterator and return a pointer to the next element in the list.
+ */
 void* AListNext(AList* it);
+
+/**
+ * Retrieve the data stored in the list. If <element> is non-null,
+ * the element is copied.
+ *
+ * Returns a pointer to the element in the list.
+ */
 void* AListData(AListIt* it, void* element);
 
 /**
