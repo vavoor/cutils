@@ -53,7 +53,7 @@ typedef struct {
  *
  * LListIt it;
  * for (LListFirst(list, &it); !LListEol(&it); LListNext(&it)) {
- *   LListGet(&it, &element)
+ *   LListData(&it, &element)
  *   ...
  * }
  *
@@ -82,7 +82,7 @@ void* LListNext(LListIt* it);
  *
  * Returns a pointer to the element in the list.
  */
-void* LListGet(LListIt* it, void* element);
+void* LListData(LListIt* it, void* element);
 
 /**
  * Apply the <operation> on each element in the <list> passing the index of the

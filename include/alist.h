@@ -131,6 +131,14 @@ void* AListGet(AList* list, int i, void* element);
  */
 void* AListSet(AList* list, int i, void* element);
 
+typedef struct {
+  void* dummy[2];
+} AListIt;
+
+void* AListFirst(AList* list, AListIt* it);
+int ALIstEol(AListIt* it);
+void* AListNext(AList* it);
+void* AListData(AListIt* it, void* element);
 
 /**
  * Apply the <operation> on each element in the <list> passing the index of the

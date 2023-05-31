@@ -11,9 +11,15 @@ struct AList {
   void* elements;
 };
 
+struct Iterator {
+  AList* list;
+  int idx;
+};
+
 AList* AListCreate(AList* list, int element_size, int capacity)
 {
   assert(sizeof(AList) >= sizeof(struct AList));
+  assert(sizeof(AListIt) >= sizeof(struct Iterator));
   assert(element_size > 0);
   assert(capacity >= 0);
 
@@ -173,6 +179,43 @@ void* AListSet(AList* list, int i, void* element)
   }
 
   return p;
+}
+
+void* AListFirst(AList* list, AListIt* it)
+{
+  assert(list != NULL);
+  assert(it != NULL);
+
+  struct Iterator* i = (struct Iterator*) it;
+  i->list = list;
+  i->idx = 0;
+
+  return AListGet(list, i->idx, NULL);
+}
+
+int ALIstEol(AListIt* it)
+{
+  assert(it != NULL);
+  struct Iterator* i = (struct Iterator*) it;
+
+  return i->idx >= AListLength(i->list);
+}
+
+void* AListNext(AList* it)
+{
+  assert(it != NULL);
+  struct Iterator* i = (struct Iterator*) it;
+  if (i->idx < AListLength(i->list)) {
+    i->idx++;
+  }
+  return AListGet(i->list, i->idx, NULL);
+}
+
+void* AListData(AListIt* it, void* element)
+{
+  assert(it != NULL);
+  struct Iterator* i = (struct Iterator*) it;
+  return AListGet(i->list, i->idx, NULL);
 }
 
 void AListForAll(AList* list, AListOp operation, void* pass_through)

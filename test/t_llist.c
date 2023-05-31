@@ -61,15 +61,15 @@ static void test_iterating(void* pt)
   i = 0;
   dp = LListFirst(&list, &it);
   UT_expect(*dp == (double) i, "First element is 0.0, but is %g", *dp);
-  dp = LListGet(&it, &d);
-  UT_expect(d == (double) i && *dp == d, "LListGet returns first element");
+  dp = LListData(&it, &d);
+  UT_expect(d == (double) i && *dp == d, "LListData returns first element");
 
   while (!LListEol(&it)) {
-    dp = LListGet(&it, &d);
-    UT_expect(d == (double) i && *dp == d, "LListGet returns %d-th element", i);
+    dp = LListData(&it, &d);
+    UT_expect(d == (double) i && *dp == d, "LListData returns %d-th element", i);
     dp = LListNext(&it);
     i++;
-    UT_expect((dp == NULL && i == N) || (*dp == (double) i), "LListGet returns element or NULL");
+    UT_expect((dp == NULL && i == N) || (*dp == (double) i), "LListData returns element or NULL");
   }
   UT_expect(i == N, "Iterated over %d elements", N);
 
@@ -92,7 +92,7 @@ static void test_iteration_pattern1(void* pt)
   i = 0;
   for (LListFirst(list, &it); !LListEol(&it); LListNext(&it)) {
     double el;
-    LListGet(&it, &el);
+    LListData(&it, &el);
     UT_expect(el == (double) -i, "%d expected", -i);
     i++;
   }
