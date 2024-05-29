@@ -7,8 +7,8 @@ static void single_string(void* pt)
   JSON j;
   char s[] = " \"foo bar\"\n";
   JSONParse(&j, s);
-  UT_expect(j.type == J_STRING, "j is a string");
-  UT_expect(strcmp(j.string.value, "foo bar") == 0, "j is foo bar");
+  UT_EXPECT(j.type == J_STRING, "j is a string");
+  UT_EXPECT(strcmp(j.string.value, "foo bar") == 0, "j is foo bar");
 }
 
 static void single_object(void* pt)

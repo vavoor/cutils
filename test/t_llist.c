@@ -7,13 +7,13 @@ static void test_creation(void* pt)
 {
   LList list;
   LList* l = LListCreate(&list, sizeof(double));
-  UT_expect(l == &list, "Passed list is returned");
-  UT_expect(LListLength(&list) == 0, "New list is empty");
-  UT_expect(LListElementSize(&list) == sizeof(double), "List can store doubles");
+  UT_EXPECT(l == &list, "Passed list is returned");
+  UT_EXPECT(LListLength(&list) == 0, "New list is empty");
+  UT_EXPECT(LListElementSize(&list) == sizeof(double), "List can store doubles");
 
   LListClear2(&list);
-  UT_expect(LListLength(&list) == 0, "Cleared list is empty");
-  UT_expect(LListElementSize(&list) == sizeof(double), "Cleared list still can store doubles");
+  UT_EXPECT(LListLength(&list) == 0, "Cleared list is empty");
+  UT_EXPECT(LListElementSize(&list) == sizeof(double), "Cleared list still can store doubles");
 }
 
 static void test_appending(void* pt)
@@ -25,16 +25,16 @@ static void test_appending(void* pt)
 
   d = 3.14;
   dp = (double*) LListAppend(list, &d);
-  UT_expect(LListLength(list) == 1, "One element in list");
-  UT_expect(*dp == d, "Element is in list");
+  UT_EXPECT(LListLength(list) == 1, "One element in list");
+  UT_EXPECT(*dp == d, "Element is in list");
 
   d = -2.71;
   dp = (double*) LListAppend(list, &d);
-  UT_expect(LListLength(list) == 2, "Two element in list");
-  UT_expect(*dp == d, "Element is in list");
+  UT_EXPECT(LListLength(list) == 2, "Two element in list");
+  UT_EXPECT(*dp == d, "Element is in list");
 
   LListClear2(list);
-  UT_expect(LListLength(list) == 0, "Cleared list is empty");
+  UT_EXPECT(LListLength(list) == 0, "Cleared list is empty");
 }
 
 static void test_iterating(void* pt)
@@ -47,8 +47,8 @@ static void test_iterating(void* pt)
   LListIt it;
 
   dp = LListFirst(&list, &it);
-  UT_expect(dp == NULL, "First element of empty list is NULL");
-  UT_expect(LListEol(&it), "First element of empty list of EOL");
+  UT_EXPECT(dp == NULL, "First element of empty list is NULL");
+  UT_EXPECT(LListEol(&it), "First element of empty list of EOL");
 
   int i;
   const int N = 1000;
@@ -56,22 +56,22 @@ static void test_iterating(void* pt)
     d = (double) i;
     LListAppend(&list, &d);
   }
-  UT_expect(LListLength(&list) == N, "%d elements in list", N);
+  UT_EXPECT(LListLength(&list) == N, "%d elements in list", N);
 
   i = 0;
   dp = LListFirst(&list, &it);
-  UT_expect(*dp == (double) i, "First element is 0.0, but is %g", *dp);
+  UT_EXPECT(*dp == (double) i, "First element is 0.0, but is %g", *dp);
   dp = LListData(&it, &d);
-  UT_expect(d == (double) i && *dp == d, "LListData returns first element");
+  UT_EXPECT(d == (double) i && *dp == d, "LListData returns first element");
 
   while (!LListEol(&it)) {
     dp = LListData(&it, &d);
-    UT_expect(d == (double) i && *dp == d, "LListData returns %d-th element", i);
+    UT_EXPECT(d == (double) i && *dp == d, "LListData returns %d-th element", i);
     dp = LListNext(&it);
     i++;
-    UT_expect((dp == NULL && i == N) || (*dp == (double) i), "LListData returns element or NULL");
+    UT_EXPECT((dp == NULL && i == N) || (*dp == (double) i), "LListData returns element or NULL");
   }
-  UT_expect(i == N, "Iterated over %d elements", N);
+  UT_EXPECT(i == N, "Iterated over %d elements", N);
 
   LListClear2(&list);
 }
@@ -93,7 +93,7 @@ static void test_iteration_pattern1(void* pt)
   for (LListFirst(list, &it); !LListEol(&it); LListNext(&it)) {
     double el;
     LListData(&it, &el);
-    UT_expect(el == (double) -i, "%d expected", -i);
+    UT_EXPECT(el == (double) -i, "%d expected", -i);
     i++;
   }
 
@@ -116,11 +116,11 @@ static void test_iteration_pattern2(void* pt)
   LListIt it;
   i = 0;
   double* ep = LListFirst(list, &it);
-  UT_expect(*ep == (double) -i, "%d expected", -i);
+  UT_EXPECT(*ep == (double) -i, "%d expected", -i);
   i++;
   while (ep != NULL) {
     ep = LListNext(&it);
-    UT_expect(ep == NULL || *ep == (double) -i, "%d expected", -i);
+    UT_EXPECT(ep == NULL || *ep == (double) -i, "%d expected", -i);
     i++;
   }
 
@@ -156,7 +156,7 @@ static void test_for_all(void* pt)
 
   value = 0.0;
   LListForAll(&list, add, &value);
-  UT_expect(value == sum, "Sum of elements is %g", sum);
+  UT_EXPECT(value == sum, "Sum of elements is %g", sum);
 }
 
 int main()

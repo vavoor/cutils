@@ -18,7 +18,7 @@ void test_replacements(void* pt)
   char template[] = "Say %{greeting}% to %{the world}%\n";
   char* p = buffer;
   template_print_filter(print_to_buffer, &p, template, "greeting", "Hello", "the world", "Gerd", NULL);
-  UT_expect(strcmp(buffer, "Say Hello to Gerd\n")==0, "Replaces defined names");
+  UT_EXPECT(strcmp(buffer, "Say Hello to Gerd\n")==0, "Replaces defined names");
 }
 
 int main()

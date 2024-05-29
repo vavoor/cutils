@@ -4,13 +4,13 @@
 void test_errors(void* pt)
 {
   ErrError("This %s an error message", "is");
-  UT_expect(ErrErrorCount() == 1, "One error was emitted");
+  UT_EXPECT(ErrErrorCount() == 1, "One error was emitted");
 }
 
 void test_warnings(void* pt)
 {
     ErrWarning("This %s a warning message", "is");
-    UT_expect(ErrWarningCount() == 1, "One warning was emitted");
+    UT_EXPECT(ErrWarningCount() == 1, "One warning was emitted");
 }
 
 int main()

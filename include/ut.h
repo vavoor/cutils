@@ -8,12 +8,12 @@
  * #include "ut.h"
  *
  * void test1(void* pass_through) {
- *   UT_fail("This test always fails");
+ *   UT_FAIL("This test always fails");
  * }
  *
  * void test_compare_string(void* pass_through) {
  *   int* ip = (int*) pass_through;
- *   UT_expect(*ip < 42, "parameter is less than 42, but it's %d", *ip);
+ *   UT_EXPECT(*ip < 42, "parameter is less than 42, but it's %d", *ip);
  * }
  *
  * int main() {
@@ -102,13 +102,13 @@ do {\
   }\
 } while (0)
 
-#define _ut_fail(MSG) \
+#define _ut_fail(PATH, LINE, MSG) \
 do {\
   _UT.failing_checks++;\
   if (_UT.failing_checks < 10) {\
     va_list ap;\
     va_start(ap, MSG);\
-    fprintf(_UT.out, "    Failing condition: ");\
+    fprintf(_UT.out, "%s:%d: Failing condition: ", PATH, LINE);\
     vfprintf(_UT.out, MSG, ap);\
     fputc('\n', _UT.out);\
     va_end(ap);\
@@ -137,19 +137,21 @@ static int UT_end(void)
   return _UT.failure_count;
 }
 
-static void UT_expect(int condition, const char *msg, ...)
+static void UT_expect(const char* path, int line, int condition, const char *msg, ...)
 {
   _ut_die_unless_initialized();
   if (!condition) {
-    _ut_fail(msg);
+    _ut_fail(path, line, msg);
   }
 }
+#define UT_EXPECT(COND, MSG...) UT_expect(__FILE__, __LINE__, (COND), MSG)
 
-static void UT_fail(const char* msg, ...)
+static void UT_fail(const char* path, int line, const char* msg, ...)
 {
   _ut_die_unless_initialized();
-  _ut_fail(msg);
+  _ut_fail(path, line, msg);
 }
+#define UT_FAIL(MSG...) UT_fail(__FILE__, __LINE__, MSG)
 
 static void UT_run(const char* name, void (*test)(void*), void* pass_through)
 {
