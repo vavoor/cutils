@@ -34,6 +34,7 @@ static int hash_function(const char* key)
 
 static int find_free_slot(struct _HMap* m, int hash)
 {
+  assert(m->hash_capacity > 0);
   int h = hash % m->hash_capacity;
   int i;
   for (i = h; i < m->hash_capacity; i++) {
@@ -51,6 +52,7 @@ static int find_free_slot(struct _HMap* m, int hash)
 
 static int find_slot(struct _HMap* m, const char* key, int hash, int* slot)
 {
+  assert(m->hash_capacity > 0);
   int found = 0;
   int hops = 0;
   int h = hash % m->hash_capacity;
@@ -265,6 +267,10 @@ int HMapFind(HMap* map, const char* key, void* element)
   assert(key != NULL);
 
   struct _HMap* m = (struct _HMap*) map;
+  if (m->hash_capacity == 0) {
+  	return -1;
+  }
+
   int hash = hash_function(key);
   int slot;
 
