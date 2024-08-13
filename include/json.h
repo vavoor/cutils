@@ -45,7 +45,7 @@ void JSONBooleanCreate(JSON* json, int value);
 /**
  * Returns true if parsed successfully
  */
-int JSONParse(JSON* json, const char* json_string);
+int JSONParse(JSON* json, const unsigned char* json_string);
 
 void JSONSerialize(JSON* json, void (*writer)(int c, void* pt), void* pt);
 void SerializeToFILE(int c, void* pt /* FILE* */);

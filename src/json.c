@@ -6,7 +6,7 @@
 
 #include "json.h"
 
-static const char* inp;
+static const unsigned char* inp;
 
 static void skip_ws(void)
 {
@@ -17,12 +17,13 @@ static void skip_ws(void)
 
 static void skip_string(void)
 {
-  const char* p = inp;
+  const unsigned char* p = inp;
 
   if (*p == '\'' || *p == '\"') {
     int sep = *p++;
     while (*p != '\0' && *p != sep) {
       if (p[0] == '\\' && p[1] != '\0') {
+        // TODO need to process escapes, e.g. \u1234
         p++;
       }
       p++;
@@ -137,7 +138,7 @@ static int parse_array(JSON*);
 
 static int parse_string(JSON* json)
 {
-  const char* value = inp;
+  const unsigned char* value = inp;
   skip_string();
   if (value == inp) {
     return 0;
@@ -155,7 +156,7 @@ static int parse_string(JSON* json)
 
 static int parse_number(JSON* json)
 {
-  const char* value = inp;
+  const unsigned char* value = inp;
   while (isdigit(*inp) || *inp == '.') {
     inp++;
   }
@@ -256,7 +257,7 @@ static int parse_property(JSON* jobj)
 {
   assert(jobj->type == J_OBJECT);
 
-  const char* key = inp;
+  const unsigned char* key = inp;
   skip_string();
   if (key == inp) {
     return 0;
@@ -327,7 +328,7 @@ static int parse_object(JSON* json)
   return 1;
 }
 
-int JSONParse(JSON* json, const char* json_string)
+int JSONParse(JSON* json, const unsigned char* json_string)
 {
   assert(json != NULL);
   assert(json_string != NULL);
@@ -357,9 +358,9 @@ static void ind(int indent, void (*writer)(int c, void* pt), void* pt)
   }
 }
 
-static void dump_chars(const char* s, void (*writer)(int c, void* pt), void* pt)
+static void dump_chars(const unsigned char* s, void (*writer)(int c, void* pt), void* pt)
 {
-  const char* p = s;
+  const unsigned char* p = s;
   while (*p != '\0') {
     writer(*p, pt);
     p++;

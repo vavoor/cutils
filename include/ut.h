@@ -144,7 +144,7 @@ static void UT_expect(const char* path, int line, int condition, const char *msg
     _ut_fail(path, line, msg);
   }
 }
-#define UT_EXPECT(COND, MSG...) UT_expect(__FILE__, __LINE__, (COND), MSG)
+#define UT_EXPECT(COND, MSG...) UT_expect(__FILE__, __LINE__, COND, MSG)
 
 static void UT_fail(const char* path, int line, const char* msg, ...)
 {

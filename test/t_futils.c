@@ -9,7 +9,7 @@
 
 void test_loading_small_file(void* pt)
 {
-  char* content;
+  unsigned char* content;
 
   int n = FUReadFile("test/lorem.txt", 0, FU_FLAGS_NONE, &content);
   UT_EXPECT(n == 1332, "1332 bytes of lorem.txt are read");
@@ -34,7 +34,7 @@ void test_loading_small_file(void* pt)
 
 void test_loading_large_file(void* pt)
 {
-  char* content;
+  unsigned char* content;
 
   char fname[] = "/tmp/fileXXXXXX";
   int fd = mkstemp(fname);
@@ -60,11 +60,25 @@ void test_loading_large_file(void* pt)
   free(content);
   remove(fname);
 }
+void test_utf8(void* pt)
+{
+  unsigned char buffer[10];
+  int i;
+  int cp;
+  
+  for (i = 0; i <= 0x010FFFF; i++) {
+    int n1 = FUUtf8Encode(i, buffer);
+    int n2 = FUUtf8Decode(buffer, &cp);
+    UT_EXPECT(n1 == n2, "Same length");
+    UT_EXPECT(i == cp, "Same codepoint (%X, %X)", i, cp);
+  }
+}
 
 int main()
 {
   UT_start("futils", _UT_FLAGS_NONE);
   UT_RUN(test_loading_small_file, NULL);
   UT_RUN(test_loading_large_file, NULL);
+  UT_RUN(test_utf8, NULL);
   return UT_end();
 }

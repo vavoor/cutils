@@ -11,29 +11,29 @@ void test1(void* pt)
   char* FOO = "foo";
   char* BAR = "bar";
   
-  Set set;
-  SetNew(&set);
-  UT_EXPECT(SetSize(&set) == 0, "Empty sets are empty");
+  PSet set;
+  PSetNew(&set);
+  UT_EXPECT(PSetSize(&set) == 0, "Empty sets are empty");
   
-  SetAdd(&set, FOO);
-  UT_EXPECT(SetSize(&set) == 1, "Having added an element increases size");
+  PSetAdd(&set, FOO);
+  UT_EXPECT(PSetSize(&set) == 1, "Having added an element increases size");
   
-  SetAdd(&set, BAR);
-  UT_EXPECT(SetSize(&set) == 2, "Having added another element increases size");
+  PSetAdd(&set, BAR);
+  UT_EXPECT(PSetSize(&set) == 2, "Having added another element increases size");
   
-  SetAdd(&set, FOO);
-  UT_EXPECT(SetSize(&set) == 2, "Adding same element doesn´t increase size");
+  PSetAdd(&set, FOO);
+  UT_EXPECT(PSetSize(&set) == 2, "Adding same element doesn´t increase size");
   
-  SetAdd(&set, BAR);
-  UT_EXPECT(SetSize(&set) == 2, "Adding same element doesn´t increase size");
+  PSetAdd(&set, BAR);
+  UT_EXPECT(PSetSize(&set) == 2, "Adding same element doesn´t increase size");
   
-  SetClear(&set);
-  UT_EXPECT(SetSize(&set) == 0, "Cleared empty sets are empty");
+  PSetClear(&set);
+  UT_EXPECT(PSetSize(&set) == 0, "Cleared empty sets are empty");
 }
 
 void test2(void* pt)
 {
-  Set *set = SetNew(NULL);
+  PSet *set = PSetNew(NULL);
   
   const int N = 10000;
   
@@ -45,23 +45,23 @@ void test2(void* pt)
   }
   
   for (i = 0; i < N; i++) {
-    int r = SetAdd(set, elements[i]);
+    int r = PSetAdd(set, elements[i]);
     UT_EXPECT(r == 0, "Element not yet in the set");
   }
   
   for (i = N-1; i >= 0; i--) {
-    int r = SetAdd(set, elements[i]);
+    int r = PSetAdd(set, elements[i]);
     UT_EXPECT(r == 1, "Element not yet in the set");
   }
   
   for (i = 0; i < N; i++) {
-    int r = SetContains(set, elements[i]);
+    int r = PSetContains(set, elements[i]);
     UT_EXPECT(r == 1, "Element is in set");
   }
   
-  UT_EXPECT(SetContains(set, "blabla") == 0, "Element is not in set");
+  UT_EXPECT(PSetContains(set, "blabla") == 0, "Element is not in set");
   
-  SetClear(set);
+  PSetClear(set);
   free(set);
 }
 
