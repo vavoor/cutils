@@ -106,8 +106,8 @@ void* PMapGet(PMap* map, const char* key);
 Pair* PMapGetPair(PMap* map, const char* key);
 
 /*
- * Stores <s> in the map <syms> using <s> as key if not present already.
- * This function can be used to store strings uniquely.
+ * Stores a copy of <s> in the map <syms> using <s> as key if not present already.
+ * This function can be used to store strings exactly once.
  * Returns the key of <s>.
  * 
  * Example
