@@ -16,6 +16,17 @@ struct Iterator {
   int idx;
 };
 
+static void free_elements(struct AList* l, int n, AListOp free_op, void* pass_through)
+{
+  if (free_op != NULL) {
+    int i;
+    for (i = n; i < l->elements_count; i++) {
+      void* p = l->elements + l->element_size * i;
+      free_op(i, p, pass_through);
+    }
+  }
+}
+
 AList* AListCreate(AList* list, int element_size, int capacity)
 {
   assert(sizeof(AList) >= sizeof(struct AList));
@@ -61,14 +72,8 @@ void AListClear(AList* list, AListOp free_op, void* pass_through)
 {
   assert(list != NULL);
   struct AList* l = (struct AList*) list;
-
-  if (free_op != NULL) {
-    int i;
-    for (i = 0; i < l->elements_count; i++) {
-      void* p = l->elements + l->element_size * i;
-      free_op(i, p, pass_through);
-    }
-  }
+  
+  free_elements(l, 0, free_op, pass_through);
 
   free(l->elements);
   l->elements = NULL;
@@ -82,17 +87,25 @@ void AListClear2(AList* list)
   AListClear(list, NULL, NULL);
 }
 
-void AListTruncate(AList* list, int n)
+void AListTruncate(AList* list, int n, AListOp free_op, void* pass_through)
 {
   assert(list != NULL);
   struct AList* l = (struct AList*) list;
 
   if (0 <= n && n < l->elements_count) {
+    free_elements(l, n, free_op, pass_through);
     l->elements_count = n;
   }
   else if (n < 0 && l->elements_count + n >= 0) {
-    l->elements_count += n;
+    int elements_count = l->elements_count + n;
+    free_elements(l, elements_count, free_op, pass_through);
+    l->elements_count = elements_count;
   }
+}
+
+void AListTruncate2(AList* list, int n)
+{
+  AListTruncate(list, n, NULL, NULL);
 }
 
 int AListLength(AList* list)

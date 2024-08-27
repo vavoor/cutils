@@ -245,3 +245,172 @@ int FUUtf8Encode(int cp, unsigned char* out)
   
   return 0;
 }
+
+/*
+ * Writes count bytes from buffer using method as-is.
+ */
+static void output_buffer_as_is(unsigned char* buffer, int count, int (*writer)(int c, void* pt), void* pt)
+{
+  int i;
+  
+  for (i = 0; i < count; i++) {
+    writer(buffer[i], pt);
+  }
+}
+
+/*
+ * Writes count bytes from buffer using writer by encoding each byte in the UTF-8 encoding scheme.
+ */
+static void output_buffer_as_utf8(unsigned char* buffer, int count, int (*writer)(int c, void* pt), void* pt)
+{
+  int i;
+  unsigned char out[10];
+  
+  for (i = 0; i < count; i++) {
+    int n = FUUtf8Encode(buffer[i], out);
+    int k;
+    for (k = 0; k < n; k++) {
+      writer(out[k], pt);
+    }
+  }
+}
+
+int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* pt_out), void* pt_out)
+{
+  assert(inp != NULL);
+  assert(outp != NULL);
+  
+  unsigned char buffer[10];
+  int count = 0;
+  int state = 1;
+  int encoding = FU_ASCII7;
+  
+  int c;
+  while ((c = inp(pt_in)) >= 0 ) {
+  
+    switch (state) {
+      
+    case 1: // nothing read
+      buffer[count++] = c;
+      if (0 <= c && c < 0x80) {
+        state = 1;
+        output_buffer_as_is(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      else if ((c & 0xE0) == 0xC0) {
+        state = 2;
+        encoding = encoding == FU_ASCII7 ? FU_UTF8 : encoding;
+      }
+      else if ((c & 0xF0) == 0xE0) {
+        state = 3;
+        encoding = encoding == FU_ASCII7 ? FU_UTF8 : encoding;
+      }
+      else if ((c & 0xF8) == 0xF0) {
+        state = 5;
+        encoding = encoding == FU_ASCII7 ? FU_UTF8 : encoding;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 2: // UTF-8 header two byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 1;
+        output_buffer_as_is(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 3: // UTF-8 header three byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 4;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 4: // second byte of three byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 1;
+        output_buffer_as_is(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 5: // UTF-8 header of four byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 6;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 6: // second byte of four byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 7;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    case 7: // third byte of four byte codepoint read
+      buffer[count++] = c;
+      if ((0xC0 & c) == 0x80) {
+        state = 1;
+        output_buffer_as_is(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      else {
+        state = 1;
+        encoding = FU_ASCII8;
+        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        count = 0;
+      }
+      break;
+      
+    default:
+      assert("Illegal state encountered" == NULL);
+      break;
+    }
+  }
+  if (count > 0) {
+    encoding = FU_ASCII8;
+  }
+  output_buffer_as_is(buffer, count, outp, pt_out);
+  count = 0;
+  
+  return encoding;
+}

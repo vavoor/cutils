@@ -79,7 +79,8 @@ void AListClear2(AList* list);
  * After AListTruncate(alist, -1), the length of alist is 4.
  * After AListTruncate(alist, -6), the length of alist is unchanged (5).
  */
-void AListTruncate(AList* list, int n);
+void AListTruncate(AList* list, int n, AListOp free_op, void* pass_through);
+void AListTruncate2(AList* list, int n);
 
 /**
  * Returns the number of elements in <list>.
