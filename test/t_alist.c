@@ -54,13 +54,13 @@ void truncate(void* pt)
     e.a = i;
     AListAppend(&al, &e);
   }
-  AListTruncate(&al, 5);
+  AListTruncate2(&al, 5);
   UT_EXPECT(AListLength(&al) == 5, "truncate reduces size");
 
-  AListTruncate(&al, -2);
+  AListTruncate2(&al, -2);
   UT_EXPECT(AListLength(&al) == 3, "reduced length by 2");
 
-  AListTruncate(&al, 1);
+  AListTruncate2(&al, 1);
   e.a = 99;
   AListAppend(&al, &e);
   UT_EXPECT(((struct Element*)AListGet(&al, 0, NULL))->a == 0, "expecting 0");
