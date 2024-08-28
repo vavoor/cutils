@@ -5,7 +5,7 @@ CC=gcc
 AR= ar
 
 OBJ=obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o obj/str.o obj/json.o\
-    obj/pmap.o obj/plist.o obj/pset.o obj/sym.o obj/vector.o
+    obj/pmap.o obj/plist.o obj/pset.o obj/sym.o 
 
 all: lib/cutils.a
 
@@ -60,6 +60,3 @@ obj/pset.o: src/pset.c include/pset.h
     
 obj/sym.o: src/sym.c include/sym.h include/pmap.h include/plist.h
 	$(CC) $(CFLAGS) -c -o obj/sym.o src/sym.c
-	
-obj/vector.o: src/vector.c include/vector.h
-	$(CC) $(CFLAGS) -c -o obj/vector.o src/vector.c
