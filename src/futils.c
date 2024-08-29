@@ -110,7 +110,6 @@ int FUEscapeCChar(int c, unsigned char* out)
 
 int FUEscapeJSONChar(int c, unsigned char* out)
 {
-  assert(0 <= c && c < 256);
   int len = 2;
 
   switch (c) {
@@ -147,13 +146,16 @@ int FUEscapeJSONChar(int c, unsigned char* out)
       break;
 
     default:
-      if ((0 <= c && c < ' ') || (127 <= c && c < 256)) {
+      if (0 <= c && c < 128) {
+        out[0] = c;
+        out[1] = '\0';
+        len = 1;
+      }
+      else if (128 <= c && c < 0x110000 ) {
         len = sprintf(out, "\\u%4.4X", c);
       }
       else {
-        *out++ = c;
-        *out = '\0';
-        len = 1;
+        assert("Codepoint cannot be encoded as UTF-8" == NULL);
       }
       break;
   }
@@ -222,17 +224,20 @@ int FUUtf8Encode(int cp, unsigned char* out)
   
   if (cp < 0x0080) {
     p[0] = cp;
+    p[1] = '\0';
     return 1;
   }
   else if (cp < 0x0800) {
     p[0] = 0xC0 | ((cp >> 6) & 0x1F);
     p[1] = 0x80 | (cp & 0x3F);
+    p[2] = '\0';
     return 2;
   }
   else if (cp < 0x010000) {
     p[0] = 0xE0 | ((cp >> 12) & 0x0F);
     p[1] = 0x80 | ((cp >> 6) & 0x3F);
     p[2] = 0x80 | (cp & 0x3F);
+    p[3] = '\0';
     return 3;
   }
   else if (cp < 0x0110000) {
@@ -240,6 +245,7 @@ int FUUtf8Encode(int cp, unsigned char* out)
     p[1] = 0x80 | ((cp >> 12) & 0x3F);
     p[2] = 0x80 | ((cp >> 6) & 0x3F);
     p[3] = 0x80 | (cp & 0x3F);
+    p[4] = '\0';
     return 4;
   }
   
@@ -247,38 +253,23 @@ int FUUtf8Encode(int cp, unsigned char* out)
 }
 
 /*
- * Writes count bytes from buffer using method as-is.
+ * Writes count bytes from buffer using output_codepoint by encoding each byte in the UTF-8 encoding scheme.
  */
-static void output_buffer_as_is(unsigned char* buffer, int count, int (*writer)(int c, void* pt), void* pt)
-{
-  int i;
-  
-  for (i = 0; i < count; i++) {
-    writer(buffer[i], pt);
-  }
-}
-
-/*
- * Writes count bytes from buffer using writer by encoding each byte in the UTF-8 encoding scheme.
- */
-static void output_buffer_as_utf8(unsigned char* buffer, int count, int (*writer)(int c, void* pt), void* pt)
+static void output_ascii8(unsigned char* buffer, int count, int (*output_codepoint)(unsigned char* cp, int bytes, void* pt), void* pt)
 {
   int i;
   unsigned char out[10];
   
   for (i = 0; i < count; i++) {
     int n = FUUtf8Encode(buffer[i], out);
-    int k;
-    for (k = 0; k < n; k++) {
-      writer(out[k], pt);
-    }
+    output_codepoint(out, n, pt);
   }
 }
 
-int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* pt_out), void* pt_out)
+int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(unsigned char* cp, int bytes, void* pt), void* pt_out)
 {
   assert(inp != NULL);
-  assert(outp != NULL);
+  assert(output_codepoint != NULL);
   
   unsigned char buffer[10];
   int count = 0;
@@ -294,7 +285,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       buffer[count++] = c;
       if (0 <= c && c < 0x80) {
         state = 1;
-        output_buffer_as_is(buffer, count, outp, pt_out);
+        output_codepoint(buffer, count, pt_out);
         count = 0;
       }
       else if ((c & 0xE0) == 0xC0) {
@@ -312,7 +303,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -321,13 +312,13 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
         state = 1;
-        output_buffer_as_is(buffer, count, outp, pt_out);
+        output_codepoint(buffer, count, pt_out);
         count = 0;
       }
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -340,7 +331,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -349,13 +340,13 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
         state = 1;
-        output_buffer_as_is(buffer, count, outp, pt_out);
+        output_codepoint(buffer, count, pt_out);
         count = 0;
       }
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -368,7 +359,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -381,7 +372,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -390,13 +381,13 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
         state = 1;
-        output_buffer_as_is(buffer, count, outp, pt_out);
+        output_codepoint(buffer, count, pt_out);
         count = 0;
       }
       else {
         state = 1;
         encoding = FU_ASCII8;
-        output_buffer_as_utf8(buffer, count, outp, pt_out);
+        output_ascii8(buffer, count, output_codepoint, pt_out);
         count = 0;
       }
       break;
@@ -406,10 +397,11 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* 
       break;
     }
   }
+  
   if (count > 0) {
     encoding = FU_ASCII8;
   }
-  output_buffer_as_is(buffer, count, outp, pt_out);
+  output_ascii8(buffer, count, output_codepoint, pt_out);
   count = 0;
   
   return encoding;

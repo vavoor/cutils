@@ -53,19 +53,22 @@ int FUEscapeStr(const unsigned char* s, int (*formatter)(int, char*), unsigned c
 int FUUtf8Decode(const unsigned char* p, int* codepoint);
 
 /**
- * Encodes a codepoint using the UTF-8 encoding.
+ * Encodes a codepoint using the UTF-8 encoding as null-terminated string.
+ * Ensure there are at least 5 bytes available in p
  * Returns the number of bytes written to out.
  */
 int FUUtf8Encode(int codepoint, unsigned char* out);
 
 /**
- * Reads data from inp, recodes it into UTF-8 format and writes it to out.
+ * Reads data using inp, recodes it into UTF-8 format and writes it using outp.
  * pt_in is passed to inp. pt_out is passed to outp.
  * Input is read from inp until inp returns less than zero.
  * Reconding means:
  * - bytes < 128 are passed from inp to out
- * - sequences of one to four bytes following the UTF-8 coding scheme are passed from inp to out
+ * - sequences of one to four bytes following the UTF-8 coding scheme are passed from inp to outp
  * - bytes that don't follow the UTF-8 coding scheme are encoded into UT8 compliant byte sequences.
+ * 
+ * outp receives 1 to 4 bytes that encode one UTF-8 codepoint.
  * 
  * Returns 
  * - FU_ASCII7 if only 7 bit ASCII characters are encounter.
@@ -73,6 +76,6 @@ int FUUtf8Encode(int codepoint, unsigned char* out);
  * - FU_UTF8 if all bytes followed the UTF-8 encoding scheme
  */
 enum { FU_ASCII7, FU_ASCII8, FU_UTF8 };
-int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(int c, void* pt_out), void* pt_out);
+int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*outp)(unsigned char*, int, void* pt_out), void* pt_out);
 
 #endif /* HEADER_a73c9785_73dd_4c9d_a7f4_bf47632c9749 */
