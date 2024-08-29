@@ -1,19 +1,8 @@
 #ifndef HEADER_73d4b2b3_da30_4b2d_ada3_dc6c63c5e1aa
 #define HEADER_73d4b2b3_da30_4b2d_ada3_dc6c63c5e1aa
 
-/*
- * Implementation of a linked list of pointers.
- */
-struct PListElement {
-  struct PListElement* next;
-  void* data;
-};
-
-typedef struct _PList {
-  int count;
-  struct PListElement* first;
-  struct PListElement* last;
-  struct PListElement** index;
+typedef struct {
+  void* dummy[4];
 } PList;
 
 /*
@@ -61,6 +50,13 @@ int PListCount(PList* list);
  * Note that an index is created for this operation!
  */
 void* PListAt(PList* list, int n);
+
+/*
+ * Replaces the n-th element with data.
+ * Returns the previous data stored as n-th element or NULL for illegal indices n.
+ * Note that an index is creasted for this operation.
+ */
+void* PListSet(PList* list, int n, void* data);
 
 /*
  * Iterates through <list> and calls <it> for each element. <it> receives as argument

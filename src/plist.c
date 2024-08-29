@@ -3,9 +3,25 @@
 
 #include "plist.h"
 
+/*
+ * Implementation of a linked list of pointers.
+ */
+struct _PListElement {
+  struct _PListElement* next;
+  void* data;
+};
+
+struct _PList {
+  int count;
+  struct _PListElement* first;
+  struct _PListElement* last;
+  struct _PListElement** index;
+};
+
 PList* PListNew(PList* list)
 {
-  PList* l = list;
+  assert(sizeof(PList) >= sizeof(struct _PList));
+  struct _PList* l = (struct _PList*)list;
   if (list == NULL) {
     l = malloc(sizeof(struct _PList));
     assert(l != NULL);
@@ -15,83 +31,90 @@ PList* PListNew(PList* list)
   l->first = l->last = NULL;
   l->index = NULL;
 
-  return l;
+  return (PList*) l;
 }
 
 int PListCount(PList* list)
 {
   assert(list != NULL);
-  return list->count;
+  struct _PList* l = (struct _PList*)list;
+  return l->count;
 }
 
 void PListAppend(PList* list, void* data)
 {
   assert(list != NULL);
   assert(data != NULL);
+  
+  struct _PList* l = (struct _PList*) list;
 
-  struct PListElement* e = malloc(sizeof(struct PListElement));
+  struct _PListElement* e = malloc(sizeof(struct _PListElement));
   assert(e != NULL);
 
   e->next = NULL;
   e->data = data;
 
-  if (list->first == NULL) {
-    list->first = list->last = e;
+  if (l->first == NULL) {
+    l->first = l->last = e;
   }
   else {
-    list->last->next = e;
-    list->last = e;
+    l->last->next = e;
+    l->last = e;
   }
 
-  if (list->index != NULL) {
-    free(list->index);
-    list->index = NULL;
+  if (l->index != NULL) {
+    free(l->index);
+    l->index = NULL;
   }
 
-  list->count++;
+  l->count++;
 }
 
 void PListPush(PList* list, void* data)
 {
   assert(list != NULL);
   assert(data != NULL);
+  
+  struct _PList* l = (struct _PList*) list;
 
-  struct PListElement* e = malloc(sizeof(struct PListElement));
+  struct _PListElement* e = malloc(sizeof(struct _PListElement));
   assert(e != NULL);
 
-  e->next = list->first;
+  e->next = l->first;
   e->data = data;
 
-  if (list->first == NULL) {
-    list->first = list->last = e;
+  if (l->first == NULL) {
+    l->first = l->last = e;
   }
   else {
-    list->first = e;
+    l->first = e;
   }
 
-  if (list->index != NULL) {
-    free(list->index);
-    list->index = NULL;
+  if (l->index != NULL) {
+    free(l->index);
+    l->index = NULL;
   }
 
-  list->count++;
+  l->count++;
 }
 
 void* PListPop(PList* list)
 {
   assert(list != NULL);
-  if (list->first != NULL) {
-    struct PListElement* e = list->first;
-    list->first = e->next;
-    if (list->first == NULL) {
-      list->last = NULL;
+  struct _PList* l = (struct _PList*) list;
+  
+  if (l->first != NULL) {
+    struct _PListElement* e = l->first;
+    l->first = e->next;
+    if (l->first == NULL) {
+      l->last = NULL;
     }
 
-    if (list->index != NULL) {
-      free(list->index);
-      list->index = NULL;
+    if (l->index != NULL) {
+      free(l->index);
+      l->index = NULL;
     }
-    list->count--;
+    l->count--;
 
     void* t = e->data;
     free(e);
@@ -111,9 +134,10 @@ void* PListTop(PList* list)
 void PListClear(PList* list, void (*deleter)(void* data))
 {
   assert(list != NULL);
-  struct PListElement* e = list->first;
+  struct _PList* l = (struct _PList*) list;
+  struct _PListElement* e = l->first;
   while (e != NULL) {
-    struct PListElement* n = e->next;
+    struct _PListElement* n = e->next;
     if (deleter != NULL) {
       deleter(e->data);
     }
@@ -121,43 +145,65 @@ void PListClear(PList* list, void (*deleter)(void* data))
     e = n;
   }
 
-  list->count = 0;
-  list->first = list->last = NULL;
+  l->count = 0;
+  l->first = l->last = NULL;
 
-  if (list->index != NULL) {
-    free(list->index);
-    list->index = NULL;
+  if (l->index != NULL) {
+    free(l->index);
+    l->index = NULL;
+  }
+}
+
+static void create_index(struct _PList* list)
+{
+  if (list->index == NULL) {
+    list->index = malloc(list->count * sizeof(struct _PListElement*));
+    assert(list->index != NULL);
+
+    struct _PListElement* e = list->first;
+    int i = 0;
+    while (e != NULL) {
+      struct _PListElement* n = e->next;
+      list->index[i] = e;
+      i++;
+      e = n;
+    }
   }
 }
 
 void* PListAt(PList* list, int idx)
 {
   assert(list != NULL);
+  struct _PList* l = (struct _PList*) list;
 
-  if (list->index == NULL) {
-    list->index = malloc(list->count * sizeof(struct PListElement*));
-    assert(list->index != NULL);
+  create_index(l);
+  return 0 <= idx && idx < l->count ? l->index[idx]->data : NULL;
+}
 
-    struct PListElement* e = list->first;
-    int i = 0;
-    while (e != NULL) {
-      struct PListElement* n = e->next;
-      list->index[i] = e;
-      i++;
-      e = n;
-    }
+void* PListSet(PList* list, int idx, void* data)
+{
+  assert(list != NULL);
+  struct _PList* l = (struct _PList*) list;
+  
+  create_index(l);
+  if (0 <= idx && idx < l->count) {
+    void* previous = l->index[idx]->data;
+    l->index[idx]->data = data;
+    return previous;
   }
-
-  return 0 <= idx && idx < list->count ? list->index[idx]->data : NULL;
+  else {
+    return NULL;
+  }
 }
 
 int PListIterate(PList* list, int (*it)(int i, void* data, void* pt), void* pt)
 {
   assert(list != NULL);
   assert(it != NULL);
+  struct _PList* l = (struct _PList*) list;
 
   int i = 0;
-  struct PListElement* e = list->first;
+  struct _PListElement* e = l->first;
   while (e != NULL) {
     int ret;
     if ((ret = it(i, e->data, pt))) {
@@ -173,8 +219,9 @@ void* PListFirst(PList* list, void** it)
 {
   assert(list != NULL);
   assert(it != NULL);
+  struct _PList* l = (struct _PList*) list;
 
-  struct PListElement* e = list->first;
+  struct _PListElement* e = l->first;
   *it = e;
 
   return e != NULL ? e->data : NULL;
@@ -183,7 +230,7 @@ void* PListFirst(PList* list, void** it)
 void* PListNext(void** it)
 {
   assert(it != NULL);
-  struct PListElement* e = (struct PListElement*) *it;
+  struct _PListElement* e = (struct _PListElement*) *it;
 
   if (e != NULL) {
     *it = e->next;
