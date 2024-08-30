@@ -46,7 +46,7 @@ void test_many(void* pt)
   
   for (i = N-1; i>=0; i--) {
     val.i = -i;
-    x.p = VecSet(&v, i, val.p);
+    x.p = VecSetChecked(&v, i, val.p);
     UT_EXPECT(x.i == i, "Still the same value");
     x.p = VecGet(&v, i);
     UT_EXPECT(x.i == -i, "Value negated");

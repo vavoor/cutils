@@ -385,7 +385,7 @@ void VecAppend(Vector* vec, void* element)
   int i = v->length;
   v->length++;
   grow(v, v->length);
-  VecSet(vec, i, element);
+  VecSetChecked(vec, i, element);
 }
 
 void* VecGet(Vector* vec, int i)
@@ -399,7 +399,7 @@ void* VecGet(Vector* vec, int i)
   return vec_get(v, n);
 }
 
-void* VecSet(Vector* vec, int i, void* element)
+void* VecSetChecked(Vector* vec, int i, void* element)
 {
   struct _Vector* v = (struct _Vector*) vec;
   
@@ -408,4 +408,15 @@ void* VecSet(Vector* vec, int i, void* element)
   
   int n = normalize_index(v, i);
   return vec_set(v, n, element);
+}
+
+void* VecSet(Vector* vec, int i, void* element)
+{
+    struct _Vector* v = (struct _Vector*) vec;
+  
+  assert(vec != NULL);
+  assert(v->length <= v->capacity);
+  assert(i >= 0);
+  grow(v, i + 1);
+  return vec_set(v, i, element);
 }

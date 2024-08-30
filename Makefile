@@ -1,5 +1,5 @@
-#CFLAGS=-O2 -g -I include
-CFLAGS=-g -I include
+CFLAGS=-O2 -g -I include
+#CFLAGS=-g -I include
 #CC=clang
 CC=gcc
 AR= ar
