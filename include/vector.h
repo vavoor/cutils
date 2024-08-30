@@ -16,6 +16,6 @@ void VecTruncate2(Vector* vec, int i);
 int VecLength(Vector* vec);
 void VecAppend(Vector* vec, void* element);
 void* VecGet(Vector* vec, int i);
-void VecSet(Vector* vec, int i, void* element);
+void* VecSet(Vector* vec, int i, void* element);
 
 #endif /* HEADER_79d8f03c_ae67_4eaa_9bac_279e6fa2bb40 */

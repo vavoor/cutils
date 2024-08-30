@@ -3,10 +3,15 @@
 
 #include "vector.h"
 
+#define I0(i) ( i & 0x000000FF)
+#define I1(i) ((i & 0x0000FF00) >> 8)
+#define I2(i) ((i & 0x00FF0000) >> 16)
+#define I3(i) ((i & 0xFF000000) >> 24)
+
 struct _Vector {
   int length;
-  long capacity;
-  void** elements;
+  unsigned capacity; /* 1, 256, 256*256, 256*256*256, 128*256*256*256 */
+  void* elements;
 };
 
 static int normalize_index(struct _Vector* v, int i)
@@ -28,51 +33,222 @@ static int normalize_index(struct _Vector* v, int i)
     }
 }
 
-static void** get_slot(struct _Vector* v, int i)
+static void* make_array(void)
 {
-  assert(0 <= i && i < v->capacity);
-  
-  if (v->capacity == 1) {
-    return &v->elements;
-  }
-  else if (v->capacity == 256) {
-    int i0 = i  & 0x000000FF;
-    void** p = &v->elements;
-    return &p[i0];
-  }
-  else if (v->capacity == 256*256) {
-    int i0 = i & 0x000000FF;
-    int i1 = (i & 0x0000FF00) >> 8;
-    void** p = v->elements;
-    p = p[i1];
-    return &p[i0];
-  }
-  else if (v->capacity == 256*256*256) {
-    int i0 = i & 0x000000FF;
-    int i1 = (i & 0x0000FF00) >> 8;
-    int i2 = (i & 0x00FF0000) >> 16;
-    void** p = v->elements;
-    p = p[i2];
-    p = p[i1];
-    return &p[i0];
-  }
-  else if (v->capacity == 256*256*256*256) {
-    int i0 = (i & 0x000000FF);
-    int i1 = (i & 0x0000FF00) >> 8;
-    int i2 = (i & 0x00FF0000) >> 16;
-    int i3 = (i & 0xFF000000) >> 24;
-    void** p = v->elements;
-    p = p[i3];
-    p = p[i2];
-    p = p[i1];
-    return &p[i0];
-  }
-  else {
-    return NULL;
+  void* el = calloc(256, sizeof(void*));
+  assert(el != NULL);
+  return el;
+}
+
+
+static void grow(struct _Vector* v, unsigned size)
+{
+  while (size > v->capacity) {
+    switch (v->capacity) {
+    case 1:
+      v->capacity = 256;
+      break;
+    case 256:
+      v->capacity = 256*256;
+      break;
+    case 256*256:
+      v->capacity = 256*256*256;
+      break;
+    case 256*256*256:
+      v->capacity = (unsigned) 128*256*256*256;
+      break;
+    default:
+      assert("Cannot grow array beyond 2,147,483,648 elements" == NULL);
+    }
+    void** el = make_array();
+    el[0] = v->elements;
+    v->elements = el;
   }
 }
 
-Vector* VectorCreate(Vector* vec)
+static void* vec_get(struct _Vector* v, int n)
+{
+  //~ if (n == 256) {
+    //~ int x = 17;
+  //~ }
+  if (0 <= n && n < v->length) {
+    void* p = NULL;
+    void** el;
+    
+    //~ switch (v->capacity) {
+    //~ case 1:
+      //~ break;
+      
+    //~ case 256:
+      //~ break;
+      
+    //~ case 256*256:
+      //~ break;
+      
+    //~ case 256*256*256:
+      //~ break;
+      
+    //~ case (unsigned) 128*256*256*256:
+      //~ break;
+      
+    //~ default:
+    //~ }
+    
+    switch (v->capacity) {
+      
+    case 1:
+      p = v->elements;
+      break;
+      
+    case 256:
+      el = (void**) v->elements;
+      if (el != NULL) {
+        p = el[I0(n)];
+      }
+      break;
+      
+    case 256*256:
+      el = (void**) v->elements;
+      if (el != NULL) {
+        el = (void**) el[I1(n)];
+        if (el != NULL) {
+          p = el[I0(n)];
+        }
+      }
+      break;
+      
+    case 256*256*256:
+      el = (void**) v->elements;
+      if (el != NULL) {
+        el = (void**) el[I2(n)];
+        if (el != NULL) {
+          el = (void*) el[I1(n)];
+          if (el != NULL) {
+            p = el[I0(n)];
+          }
+        }
+      }
+      break;
+      
+    case (unsigned) 128*256*256*256:
+      el = (void**) v->elements;
+      if (el != NULL) {
+        el = (void**) el[I3(n)];
+        if (el != NULL) {
+          el = (void*) el[I2(n)];
+          if (el != NULL) {
+            el = el[I1(n)];
+            if (el != NULL) {
+              p = el[I0(n)];
+            }
+          }
+        }
+      }
+      break;
+      
+    default:
+      assert("Illegal vector capacity" == NULL);
+    }
+    
+    return p;
+  }
+  
+  return NULL;
+}
+
+static void* vec_set(struct _Vector* v, int n, void* element)
+{
+  if (0 <= n && n < v->length) {
+    void* p = NULL;
+    void** el;
+    
+    switch (v->capacity) {
+      
+    case 1:
+      p = v->elements;
+      v->elements = element;
+      break;
+      
+    case 256:
+      el = &v->elements;
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      p = el[I0(n)];
+      el[I0(n)] = element;
+      break;
+      
+    case 256*256:
+      el = &v->elements;
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I1(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      p = el[I0(n)];
+      el[I0(n)] = element;
+      break;
+      
+    case 256*256*256:
+      el = &v->elements;
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I2(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I1(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      p = el[I0(n)];
+      el[I0(n)] = element;
+      break;
+      
+    case (unsigned) 128*256*256*256:
+      el = &v->elements;
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I3(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I2(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      el = &el[I1(n)];
+      if (*el == NULL) {
+        *el = make_array();
+      }
+      el = *el;
+      p = el[I0(n)];
+      el[I0(n)] = element;
+      break;
+      
+    default:
+      assert("Illegal vector capacity" == NULL);
+    }
+    return p;
+  }
+  
+  return NULL;
+}
+
+Vector* VecCreate(Vector* vec)
 {
   assert(sizeof(Vector) >= sizeof(struct _Vector));
   struct _Vector* v = (struct _Vector*) vec;
@@ -89,7 +265,7 @@ Vector* VectorCreate(Vector* vec)
   return (Vector*) v;
 }
 
-int VectorLength(Vector* vec)
+int VecLength(Vector* vec)
 {
   assert(vec != NULL);
   struct _Vector* v = (struct _Vector*) vec;
@@ -100,6 +276,79 @@ void VecClear(Vector* vec, VectorOp del, void* pt)
 {
   struct _Vector* v = (struct _Vector*) vec;
   VecTruncate(vec, 0, del, pt);
+  
+  switch (v->capacity) {
+  case 256:
+  {
+    free(v->elements);
+    break;
+  }
+    
+  case 256*256:
+  {
+    void** el1 = v->elements;
+    if (el1 != NULL) {
+      int i;
+      for (i = 0; i < 256; i++) {
+        free(el1[i]);
+      }
+      free(el1);
+    }
+    break;
+  }
+    
+  case 256*256*256:
+  {
+    void** el1 = v->elements;
+    if (el1 != NULL) {
+      int i;
+      for (i = 0; i < 256; i++) {
+        void** el2 = el1[i];
+        if (el2 != NULL) {
+          int j;
+          for (j = 0; j < 256; j++) {
+            free(el2[j]);
+          }
+          free(el2);
+        }
+      }
+      free(el1);
+    }
+    break;
+  }
+    
+  case (unsigned) 128*256*256*256:
+  {
+    void** el1 = v->elements;
+    if (el1 != NULL) {
+      int i;
+      for (i = 0; i < 256; i++) {
+        void** el2 = el1[i];
+        if (el2 != NULL) {
+          int j;
+          for (j = 0; j < 256; j++) {
+            void** el3 = el2[j];
+            if (el3 != NULL) {
+              int k;
+              for (k = 0; k < 256; k++) {
+                free(el3[k]);
+              }
+              free(el3);
+            }
+          }
+          free(el2);
+        }
+      }
+      free(el1);
+    }
+    break;
+  }
+    
+  default:
+  }
+    
+  v->capacity = 1;
+  v->elements = NULL;
 }
 
 void VecClear2(Vector* vec)
@@ -109,6 +358,18 @@ void VecClear2(Vector* vec)
 
 void VecTruncate(Vector* vec, int i, VectorOp del, void* pt)
 {
+  struct _Vector* v = (struct _Vector*) vec;
+  assert(vec != NULL);
+  int n = normalize_index(v, i);
+  if (0 <= n && n < v->length) {
+    if (del != NULL) {
+      int k;
+      for (k = n; k < v->length; k++) {
+        del(k, vec_get(v, k), pt);
+      }
+    }
+    v->length = n;
+  }
 }
 
 void VecTruncate2(Vector* vec, int i)
@@ -116,57 +377,35 @@ void VecTruncate2(Vector* vec, int i)
   VecTruncate(vec, i, NULL, NULL);
 }
 
-static void increase_depth(struct _Vector* v)
-{
-  void** e = calloc(sizeof(void*), 256);
-  assert(e != NULL);
-  e[0] = v->elements;
-  v->elements = e;
-}
-
 void VecAppend(Vector* vec, void* element)
 {
+  struct _Vector* v = (struct _Vector*) vec;
+  
+  assert(vec != NULL);
+  int i = v->length;
+  v->length++;
+  grow(v, v->length);
+  VecSet(vec, i, element);
 }
 
 void* VecGet(Vector* vec, int i)
 {
-  assert(vec != NULL);
   struct _Vector* v = (struct _Vector*) vec;
-  int n = normalize_index(v, i);
-  if (0 <= n && n < v->length) {
-    void** p = get_slot(v, i);
-    return *p;
-  }
   
-  return NULL;
+  assert(vec != NULL);
+  assert(v->length <= v->capacity);
+  
+  int n = normalize_index(v, i);
+  return vec_get(v, n);
 }
 
-void VecSet(Vector* vec, int i, void* element)
+void* VecSet(Vector* vec, int i, void* element)
 {
-  assert(vec != NULL);
   struct _Vector* v = (struct _Vector*) vec;
-  int n = normalize_index(v, i);
-  if (n >= 0) {
-    void** p = get_slot(v, i);
-    *p = element;
-  }  
-}
-
-static void** fun(int depth, void** elements, int idx)
-{
-  void** e = element;
-  int level;
-  int i[4];
-  i[0] = idx & 0x00FF;
-  i[1] = (idx >> 8) & 0x00FF;
-  i[2] = (idx >> 16) & 0x00FF;
-  i[3] = (idx >> 24) & 0x00FF;
   
-  for (level = 0; level < depth; level++) {
-    if (*e == NULL) {
-      *e = calloc(sizeof(void*), 256);
-      assert(*e != NULL);
-    }
-    *e = &e[i];
-  }
+  assert(vec != NULL);
+  assert(v->length <= v->capacity);
+  
+  int n = normalize_index(v, i);
+  return vec_set(v, n, element);
 }
