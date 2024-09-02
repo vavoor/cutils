@@ -161,18 +161,15 @@ exit:
   return NULL;
 }
 
-static void* vec_set(struct _Vector* v, int n, void* element)
+static void** vec_slot(struct _Vector* v, int n)
 {
   if (0 <= n && n < v->length) {
-    void* p = NULL;
     void** el;
     
     switch (v->capacity) {
       
     case 1:
-      p = v->elements;
-      v->elements = element;
-      break;
+      return &v->elements;
       
     case 256:
       el = &v->elements;
@@ -180,8 +177,7 @@ static void* vec_set(struct _Vector* v, int n, void* element)
         *el = make_array();
       }
       el = *el;
-      p = el[I0(n)];
-      el[I0(n)] = element;
+      return &el[I0(n)];
       break;
       
     case 256*256:
@@ -195,8 +191,7 @@ static void* vec_set(struct _Vector* v, int n, void* element)
         *el = make_array();
       }
       el = *el;
-      p = el[I0(n)];
-      el[I0(n)] = element;
+      return &el[I0(n)];
       break;
       
     case 256*256*256:
@@ -215,8 +210,7 @@ static void* vec_set(struct _Vector* v, int n, void* element)
         *el = make_array();
       }
       el = *el;
-      p = el[I0(n)];
-      el[I0(n)] = element;
+      return &el[I0(n)];
       break;
       
     case (unsigned) 128*256*256*256:
@@ -240,14 +234,12 @@ static void* vec_set(struct _Vector* v, int n, void* element)
         *el = make_array();
       }
       el = *el;
-      p = el[I0(n)];
-      el[I0(n)] = element;
+      return &el[I0(n)];
       break;
       
     default:
       assert("Illegal vector capacity" == NULL);
     }
-    return p;
   }
   
   return NULL;
@@ -394,6 +386,17 @@ void VecAppend(Vector* vec, void* element)
   VecSet(vec, i, element);
 }
 
+void** VecAt(Vector* vec, int i)
+{
+  struct _Vector* v = (struct _Vector*) vec;
+  
+  assert(vec != NULL);
+  assert(v->length <= v->capacity);
+  
+  int n = normalize_index(v, i);
+  return vec_slot(v, n);
+}
+
 void* VecGet(Vector* vec, int i)
 {
   struct _Vector* v = (struct _Vector*) vec;
@@ -407,11 +410,13 @@ void* VecGet(Vector* vec, int i)
 
 void* VecSet(Vector* vec, int i, void* element)
 {
-  struct _Vector* v = (struct _Vector*) vec;
-  
-  assert(vec != NULL);
-  assert(v->length <= v->capacity);
-  
-  int n = normalize_index(v, i);
-  return vec_set(v, n, element);
+  void** p = VecAt(vec, i);
+  if (p != NULL) {
+    void* previous = *p;
+    *p = element;
+    return previous;
+  }
+  else {
+    return NULL;
+  }
 }
