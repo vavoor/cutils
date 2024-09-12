@@ -2,7 +2,7 @@
 #define HEADER_79d8f03c_ae67_4eaa_9bac_279e6fa2bb40
 
 typedef struct {
-  void* dummy[4];
+  void* dummy[2];
 } PVector;
 
 typedef void (*VectorOp)(int index, void* element, void* pass_through);

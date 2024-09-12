@@ -1,11 +1,11 @@
-CFLAGS=-O2 -g -I include
-# CFLAGS=-g -I include
-#CC=clang
+#~ CFLAGS=-O2 -g -I include
+CFLAGS=-g -I include
+#~ CC=clang
 CC=gcc
 AR= ar
 
 OBJ=obj/alist.o obj/hmap.o obj/err.o obj/futils.o obj/llist.o obj/template.o obj/str.o obj/json.o\
-    obj/pmap.o obj/plist.o obj/pset.o obj/sym.o obj/pvector.o
+    obj/pmap.o obj/plist.o obj/pset.o obj/sym.o obj/pvector.o obj/vector.o
 
 all: lib/cutils.a
 
@@ -19,6 +19,7 @@ tst: lib/cutils.a
 	$(CC) $(CFLAGS) -g -o test/t_json.bin test/t_json.c lib/cutils.a && test/t_json.bin
 	$(CC) $(CFLAGS) -g -o test/t_pset.bin test/t_pset.c lib/cutils.a && test/t_pset.bin
 	$(CC) $(CFLAGS) -g -o test/t_pvector.bin test/t_pvector.c lib/cutils.a && test/t_pvector.bin
+	$(CC) $(CFLAGS) -g -o test/t_vector.bin test/t_vector.c lib/cutils.a && test/t_vector.bin
 
 clean:;
 	rm -rf obj/* lib/* test/*.bin
@@ -55,12 +56,15 @@ obj/pmap.o: src/pmap.c include/pmap.h
 
 obj/plist.o: src/plist.c include/plist.h
 	$(CC) $(CFLAGS) -c -o obj/plist.o src/plist.c
-    
+
 obj/pset.o: src/pset.c include/pset.h
 	$(CC) $(CFLAGS) -c -o obj/pset.o src/pset.c
-    
+
 obj/sym.o: src/sym.c include/sym.h include/pmap.h include/plist.h
 	$(CC) $(CFLAGS) -c -o obj/sym.o src/sym.c
-	
+
 obj/pvector.o: src/pvector.c include/pvector.h
 	$(CC) $(CFLAGS) -c -o obj/pvector.o src/pvector.c
+
+obj/vector.o: src/vector.c include/vector.h
+	$(CC) $(CFLAGS) -c -o obj/vector.o src/vector.c

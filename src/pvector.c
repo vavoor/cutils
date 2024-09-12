@@ -178,7 +178,6 @@ static void** vec_slot(struct _PVector* v, int n)
       }
       el = *el;
       return &el[I0(n)];
-      break;
       
     case 256*256:
       el = &v->elements;
@@ -192,7 +191,6 @@ static void** vec_slot(struct _PVector* v, int n)
       }
       el = *el;
       return &el[I0(n)];
-      break;
       
     case 256*256*256:
       el = &v->elements;
@@ -211,7 +209,6 @@ static void** vec_slot(struct _PVector* v, int n)
       }
       el = *el;
       return &el[I0(n)];
-      break;
       
     case (unsigned) 128*256*256*256:
       el = &v->elements;
@@ -235,7 +232,6 @@ static void** vec_slot(struct _PVector* v, int n)
       }
       el = *el;
       return &el[I0(n)];
-      break;
       
     default:
       assert("Illegal vector capacity" == NULL);
