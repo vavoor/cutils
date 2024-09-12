@@ -2,20 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "vector.h"
+#include "pvector.h"
 
 #define I0(i) ( i & 0x000000FF)
 #define I1(i) ((i & 0x0000FF00) >> 8)
 #define I2(i) ((i & 0x00FF0000) >> 16)
 #define I3(i) ((i & 0x7F000000) >> 24)
 
-struct _Vector {
+struct _PVector {
   int length;
   unsigned capacity; /* 1, 256, 256*256, 256*256*256, 128*256*256*256 */
   void* elements;
 };
 
-static int normalize_index(struct _Vector* v, int i)
+static int normalize_index(struct _PVector* v, int i)
 {
     int n = i < 0 ? v->length + i : i;
     
@@ -44,7 +44,7 @@ static void free_array(void* arr)
 }
 
 
-static void grow(struct _Vector* v, unsigned size)
+static void grow(struct _PVector* v, unsigned size)
 {
   while (v->capacity < size) {
     switch (v->capacity) {
@@ -88,7 +88,7 @@ static void grow(struct _Vector* v, unsigned size)
 //~ default:
 //~ }
 
-static void* vec_get(struct _Vector* v, int n)
+static void* vec_get(struct _PVector* v, int n)
 {
   if (0 <= n && n < v->length) {
     void* p = NULL;
@@ -161,7 +161,7 @@ exit:
   return NULL;
 }
 
-static void** vec_slot(struct _Vector* v, int n)
+static void** vec_slot(struct _PVector* v, int n)
 {
   if (0 <= n && n < v->length) {
     void** el;
@@ -245,13 +245,13 @@ static void** vec_slot(struct _Vector* v, int n)
   return NULL;
 }
 
-Vector* VecCreate(Vector* vec)
+PVector* PVecCreate(PVector* vec)
 {
-  assert(sizeof(Vector) >= sizeof(struct _Vector));
-  struct _Vector* v = (struct _Vector*) vec;
+  assert(sizeof(PVector) >= sizeof(struct _PVector));
+  struct _PVector* v = (struct _PVector*) vec;
   
   if (v == NULL) {
-    v = malloc(sizeof(struct _Vector));
+    v = malloc(sizeof(struct _PVector));
     assert(v != NULL);
   }
   
@@ -259,21 +259,21 @@ Vector* VecCreate(Vector* vec)
   v->elements = NULL;
   v->capacity = 1;
   
-  return (Vector*) v;
+  return (PVector*) v;
 }
 
-int VecLength(Vector* vec)
+int PVecLength(PVector* vec)
 {
   assert(vec != NULL);
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   return v->length;
 }
 
-void VecClear(Vector* vec, VectorOp del, void* pt)
+void PVecClear(PVector* vec, VectorOp del, void* pt)
 {
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   
-  VecTruncate(vec, 0, del, pt);
+  PVecTruncate(vec, 0, del, pt);
   
   switch (v->capacity) {
   case 256:
@@ -349,14 +349,14 @@ void VecClear(Vector* vec, VectorOp del, void* pt)
   v->elements = NULL;
 }
 
-void VecClear2(Vector* vec)
+void PVecClear2(PVector* vec)
 {
-  VecClear(vec, NULL, NULL);
+  PVecClear(vec, NULL, NULL);
 }
 
-void VecTruncate(Vector* vec, int i, VectorOp del, void* pt)
+void PVecTruncate(PVector* vec, int i, VectorOp del, void* pt)
 {
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   assert(vec != NULL);
   int n = normalize_index(v, i);
   if (0 <= n && n < v->length) {
@@ -370,25 +370,25 @@ void VecTruncate(Vector* vec, int i, VectorOp del, void* pt)
   }
 }
 
-void VecTruncate2(Vector* vec, int i)
+void PVecTruncate2(PVector* vec, int i)
 {
-  VecTruncate(vec, i, NULL, NULL);
+  PVecTruncate(vec, i, NULL, NULL);
 }
 
-void VecAppend(Vector* vec, void* element)
+void PVecAppend(PVector* vec, void* element)
 {
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   
   assert(vec != NULL);
   int i = v->length;
   v->length++;
   grow(v, v->length);
-  VecSet(vec, i, element);
+  PVecSet(vec, i, element);
 }
 
-void** VecAt(Vector* vec, int i)
+void** PVecAt(PVector* vec, int i)
 {
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   
   assert(vec != NULL);
   assert(v->length <= v->capacity);
@@ -397,9 +397,9 @@ void** VecAt(Vector* vec, int i)
   return vec_slot(v, n);
 }
 
-void* VecGet(Vector* vec, int i)
+void* PVecGet(PVector* vec, int i)
 {
-  struct _Vector* v = (struct _Vector*) vec;
+  struct _PVector* v = (struct _PVector*) vec;
   
   assert(vec != NULL);
   assert(v->length <= v->capacity);
@@ -408,9 +408,9 @@ void* VecGet(Vector* vec, int i)
   return vec_get(v, n);
 }
 
-void* VecSet(Vector* vec, int i, void* element)
+void* PVecSet(PVector* vec, int i, void* element)
 {
-  void** p = VecAt(vec, i);
+  void** p = PVecAt(vec, i);
   if (p != NULL) {
     void* previous = *p;
     *p = element;
