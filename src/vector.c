@@ -40,6 +40,7 @@ static struct _InnerNode* make_inner_node(void)
   struct _InnerNode* inner = malloc(sizeof(struct _InnerNode));
   assert(inner != NULL);
   memset(inner, 0, sizeof(struct _InnerNode));
+  return inner;
 }
 
 //~ switch (v->capacity) {

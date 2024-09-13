@@ -22,7 +22,7 @@ void test_creation(void* pt)
   //~ const int N = 256*256*256+1;
   //~ const int N = 16;
   //~ const int N = 255;
-  const int N = 64*256;
+  const int N = 64*256*256;
   //~ const int N =257;
 
   VecCreate(&v, sizeof(double));
