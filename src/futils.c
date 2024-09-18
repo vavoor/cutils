@@ -5,6 +5,15 @@
 
 #include "futils.h"
 
+int FUEndsWith(const char* s, const char* ending)
+{
+  assert(s != NULL);
+  assert(ending != NULL && *ending != '\0');
+
+  int i = strlen(s) - strlen(ending);
+  return i >= 0 && strcasecmp(&s[i], ending) == 0;
+}
+
 int FUReadFile(const char* fname, int max_size, int flags, unsigned char** content)
 {
   assert(content != NULL);
@@ -183,7 +192,7 @@ int FUUtf8Decode(const unsigned char* p, int* cp)
 {
   assert(p != NULL);
   assert(cp != NULL);
-  
+
   if ((p[0] & 0x80) == 0) {
     *cp = p[0];
     return 1;
@@ -215,13 +224,13 @@ int FUUtf8Decode(const unsigned char* p, int* cp)
 int FUUtf8Encode(int cp, unsigned char* out)
 {
   assert(out != NULL);
-  
+
   unsigned char* p = out;
-  
+
   if (cp < 0) {
     return 0;
   }
-  
+
   if (cp < 0x0080) {
     p[0] = cp;
     p[1] = '\0';
@@ -248,7 +257,7 @@ int FUUtf8Encode(int cp, unsigned char* out)
     p[4] = '\0';
     return 4;
   }
-  
+
   return 0;
 }
 
@@ -259,7 +268,7 @@ static void output_ascii8(unsigned char* buffer, int count, int (*output_codepoi
 {
   int i;
   unsigned char out[10];
-  
+
   for (i = 0; i < count; i++) {
     int n = FUUtf8Encode(buffer[i], out);
     output_codepoint(out, n, pt);
@@ -270,17 +279,17 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
 {
   assert(inp != NULL);
   assert(output_codepoint != NULL);
-  
+
   unsigned char buffer[10];
   int count = 0;
   int state = 1;
   int encoding = FU_ASCII7;
-  
+
   int c;
   while ((c = inp(pt_in)) >= 0 ) {
-  
+
     switch (state) {
-      
+
     case 1: // nothing read
       buffer[count++] = c;
       if (0 <= c && c < 0x80) {
@@ -307,7 +316,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 2: // UTF-8 header two byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -322,7 +331,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 3: // UTF-8 header three byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -335,7 +344,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 4: // second byte of three byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -350,7 +359,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 5: // UTF-8 header of four byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -363,7 +372,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 6: // second byte of four byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -376,7 +385,7 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     case 7: // third byte of four byte codepoint read
       buffer[count++] = c;
       if ((0xC0 & c) == 0x80) {
@@ -391,18 +400,18 @@ int FUUtf8Recode(int (*inp)(void* pt_in), void* pt_in, int (*output_codepoint)(u
         count = 0;
       }
       break;
-      
+
     default:
       assert("Illegal state encountered" == NULL);
       break;
     }
   }
-  
+
   if (count > 0) {
     encoding = FU_ASCII8;
   }
   output_ascii8(buffer, count, output_codepoint, pt_out);
   count = 0;
-  
+
   return encoding;
 }

@@ -5,6 +5,11 @@
 #define FU_FLAGS_IGNORE_LARGE_FILES 0x01
 
 /**
+ * Returns true if s ends with <ending>.
+ */
+int FUEndsWith(const char* s, const char* ending);
+
+/**
  * Read the contents of the file <fname> into memory as null-terminated
  * string. Memory is allocated and returned in <content>. It needs to be
  * deallocated by the client. At most, <max_size> bytes are read from the file.
@@ -39,9 +44,9 @@ int FUEscapeStr(const unsigned char* s, int (*formatter)(int, char*), unsigned c
  * Decodes one codepoint following the UTF-8 convention. One to four bytes are read
  * from p. The codepoint is written to *codepoint.
  * Returns the number of bytes decoded or 0 in case of error.
- * 
+ *
  * Example:
- * 
+ *
  * unsigned char* p = utf8_encoded_buffer;
  * int codepoints[...];
  * int i = 0;
@@ -67,10 +72,10 @@ int FUUtf8Encode(int codepoint, unsigned char* out);
  * - bytes < 128 are passed from inp to out
  * - sequences of one to four bytes following the UTF-8 coding scheme are passed from inp to outp
  * - bytes that don't follow the UTF-8 coding scheme are encoded into UT8 compliant byte sequences.
- * 
+ *
  * outp receives 1 to 4 bytes that encode one UTF-8 codepoint.
- * 
- * Returns 
+ *
+ * Returns
  * - FU_ASCII7 if only 7 bit ASCII characters are encounter.
  * - FU_ASCII8 if some bytes >=128 were been encoded using the UTF-8 coding scheme
  * - FU_UTF8 if all bytes followed the UTF-8 encoding scheme
