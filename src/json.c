@@ -52,11 +52,8 @@ void JSONObjectCreate(JSON* json)
 void JSONObjectAddProperty(JSON* json, const char* name, JSON* value)
 {
   assert(json->type == J_OBJECT);
-  int overwritten;
-  HMapPut2(&json->object.properties, name, value, &overwritten);
-  if (overwritten) {
-    // TODO error on duplicate property?
-  }
+  HMapPut(&json->object.properties, name, value, NULL);
+  // TODO error on duplicate property?
 }
 
 void JSONClear(JSON* json)
@@ -64,14 +61,15 @@ void JSONClear(JSON* json)
   if (json != NULL) {
     int len;
     int i;
+    HMapIt it;
+    HMapPair pair;
 
     switch (json->type) {
     case J_OBJECT:
-      len = HMapLength(&json->object.properties);
-      for (i = 0; i < len; i++) {
-        JSON* j = HMapGetValue(&json->object.properties, i, NULL);
+      for (HMapFirst(&json->object.properties, &it, &pair); !HMapEol(&it); HMapNext(&it, &pair)) {
+        JSON* j = pair.element;
         JSONClear(j);
-        HMapClear(&json->object.properties);
+        HMapClear2(&json->object.properties);
       }
       break;
 
@@ -282,14 +280,8 @@ static int parse_property(JSON* jobj)
   int last = *to;
   *to = '\0';
 
-  int overwritten;
-  HMapPut2(&jobj->object.properties, key, &value, &overwritten);
+  HMapPut(&jobj->object.properties, key, &value, NULL);
   *to = last;
-
-  if (overwritten) {
-    // TODO : error on duplicate property??
-  }
-
   return 1;
 }
 
@@ -418,19 +410,21 @@ static void dump_object(JSON* json, void (*writer)(int c, void* pt), void* pt, i
   writer('{', pt);
   indent++;
 
-  int len = HMapLength(&json->object.properties);
   int i;
-  for (i = 0; i < len; i++) {
+  HMapIt it;
+  HMapPair pair;
+
+  for (i = 0, HMapFirst(&json->object.properties, &it, &pair); !HMapEol(&it); HMapNext(&it, &pair), i++) {
     if (i > 0) {
       writer(',', pt);
     }
     writer('\n', pt);
     ind(indent, writer, pt);
     writer('\"', pt);
-    dump_chars(HMapGetKey(&json->object.properties, i), writer, pt);
+    dump_chars(pair.key, writer, pt);
     writer('\"', pt);
     dump_chars(" : ", writer, pt);
-    JSON* j = HMapGetValue(&json->object.properties, i, NULL);
+    JSON* j = pair.element;
     dump_value(j, writer, pt, indent);
   }
   writer('\n', pt);

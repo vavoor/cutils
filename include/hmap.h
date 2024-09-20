@@ -31,10 +31,16 @@
  * assert(i == -1); // entry not found
  */
 
-
 typedef struct HMap {
   void* dummy[8];
 } HMap;
+
+typedef struct {
+  const char* key;
+  void* element;
+} HMapPair;
+
+typedef int (*HMapOp)(int index, const char* key, void* element, void* pass_through);
 
 /**
  * Creates a hash map that can store elements of size <element_size> bytes.
@@ -56,8 +62,10 @@ HMap* HMapCreate(HMap* map, int element_size);
 /**
  * Deletes all entries from the hash map. Note that the <map> itself is not
  * freed.
+ * With HMapClear, <free_op> is called for each element in the hash map.
  */
-void HMapClear(HMap* map);
+void HMapClear(HMap* map, HMapOp free_op, void* passthrough);
+void HMapClear2(HMap* map);
 
 /**
  * Returns the number of elements in <map>.
@@ -65,44 +73,33 @@ void HMapClear(HMap* map);
 int HMapLength(HMap* map);
 
 /**
- * Returns the key of the i-th element in the hash map. Note that the elements
- * are stored in the order of insertion.
+ * Inserts a key-value pair into the hash table. If there was already an
+ * element in the hash map with the same key, it is copied to <previous>,
+ * provided <previous> is non-null.
+ * Returns the pointer to the element that has been inserted or overwritten.
  */
-const char* HMapGetKey(HMap* map, int i);
-
-/**
- * Returns the value of the i-th element in the hash map. Note that the elements
- * are stored in the order of insertion.
- * If <element> is non-null, the value is copied to the <element>.
- *
- * Returns a pointer to i-th element in the map.
- */
-void* HMapGetValue(HMap* map, int i, void* element);
-
-/**
- * Inserts a key-value pair into the hash table.
- * Returns the index of the element that has been inserted or overwritten.
- */
-int HMapPut(HMap* map, const char* key, void* element);
-
-/**
- * Inserts a key-value pair into the hash table. On return, <overwritten> reflects
- * whether the element has already been in the hash table is was overwritten.
- * Returns the index of the element that has been inserted or overwritten.
- */
-int HMapPut2(HMap* map, const char* key, void* element, int* overwritten);
+void* HMapPut(HMap* map, const char* key, void* element, void* previous);
 
 /**
  * Inserts a key-value pair into the hash table unless the key is already present.
  * Returns the index of the inserted element or -1 if it has not been inserted.
  */
-int HMapPutUnlessPresent(HMap* map, const char* key, void* element);
+void* HMapPutUnlessPresent(HMap* map, const char* key, void* element);
 
 /**
  * Looks up the element associated with <key> in the hash table.
  * Returns the index or -1 if not found. If found, <element> is filled
  * with value. If not found, <element> is left unchanged.
  */
-int HMapFind(HMap* map, const char* key, void* element);
+void* HMapFind(HMap* map, const char* key, void* element);
+
+typedef struct {
+  void* dummy[2];
+} HMapIt;
+
+void* HMapFirst(HMap* map, HMapIt* it, HMapPair* pair);
+void* HMapNext(HMapIt* it, HMapPair* pair);
+void* HMapData(HMapIt* it, HMapPair* pair);
+int HMapEol(HMapIt* it);
 
 #endif /* HEADER_8461ecbf_bbb3_458f_881a_1597a7934436 */

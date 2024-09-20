@@ -3,23 +3,23 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "alist.h"
+#include "llist.h"
 #include "hmap.h"
 
-struct _HMap {
-  AList elements;
-
-  int hash_capacity;
-  int* hash_map;
-};
-
 struct Element {
-  const char* key;
   int hash;
+  const char* key;
   char value[0];
 };
 #define ELEMENT_SIZE(N) (sizeof(struct Element) + (N))
 #define DATA_SIZE(EL) ((EL) - sizeof(struct Element))
+
+struct _HMap {
+  LList elements;
+
+  int hash_capacity;
+  struct Element** hash_map; // Array of pointer to the elements in the list
+};
 
 static int hash_function(const char* key)
 {
@@ -29,7 +29,7 @@ static int hash_function(const char* key)
     h = (h << 5) + (h << 2) + h + *p; /* 37 * h + p */
     p++;
   }
-  return h < 0 ? -h : h;
+  return 0x7FFFFFFF & h; // ensure the hash value is positive
 }
 
 static int find_free_slot(struct _HMap* m, int hash)
@@ -38,12 +38,12 @@ static int find_free_slot(struct _HMap* m, int hash)
   int h = hash % m->hash_capacity;
   int i;
   for (i = h; i < m->hash_capacity; i++) {
-    if (m->hash_map[i] == -1) {
+    if (m->hash_map[i] == NULL) {
       return i;
     }
   }
   for (i = 0; i < h; i++) {
-    if (m->hash_map[i] == -1) {
+    if (m->hash_map[i] == NULL) {
       return i;
     }
   }
@@ -53,14 +53,15 @@ static int find_free_slot(struct _HMap* m, int hash)
 static int find_slot(struct _HMap* m, const char* key, int hash, int* slot)
 {
   assert(m->hash_capacity > 0);
+
   int found = 0;
   int hops = 0;
   int h = hash % m->hash_capacity;
   int i;
   for (i = h; i < m->hash_capacity; i++) {
     hops++;
-    if (m->hash_map[i] != -1) {
-      struct Element* e = AListGet(&m->elements, m->hash_map[i], NULL);
+    struct Element* e = m->hash_map[i];
+    if (e != NULL) {
       if (e->hash == hash && strcmp(key, e->key) == 0) {
         *slot = i;
         found = 1;
@@ -75,8 +76,8 @@ static int find_slot(struct _HMap* m, const char* key, int hash, int* slot)
   }
   for (i = 0; i < h; i++) {
     hops++;
-    if (m->hash_map[i] != -1) {
-      struct Element* e = AListGet(&m->elements, m->hash_map[i], NULL);
+    struct Element* e = m->hash_map[i];
+    if (e != NULL) {
       if (e->hash == hash && strcmp(key, e->key) == 0) {
         *slot = i;
         found = 1;
@@ -101,26 +102,22 @@ static void rehash(struct _HMap* m)
   //~ fprintf(stderr, "Rehashing (%d)\n", m->hash_capacity);
   m->hash_capacity = m->hash_capacity < 1024 ? 1024 : 2 * m->hash_capacity;
   free(m->hash_map);
-  m->hash_map = malloc(m->hash_capacity * sizeof(int));
+  m->hash_map = calloc(m->hash_capacity, sizeof(struct Element*));
   assert(m->hash_map != NULL);
 
-  int i;
-  for (i = 0; i < m->hash_capacity; i++) {
-    m->hash_map[i] = -1;
-  }
-
-  int len = AListLength(&m->elements);
-  for (i = 0; i < len; i++) {
-    struct Element* e = AListGet(&m->elements, i, NULL);
+  LListIt it;
+  struct Element* e = LListFirst(&m->elements, &it);
+  while (e != NULL) {
     int slot = find_free_slot(m, e->hash);
-    m->hash_map[slot] = i;
+    m->hash_map[slot] = e;
+    e = LListNext(&it);
   }
 }
 
 static void grow(struct _HMap* m)
 {
   int limit = m->hash_capacity / 2 + m->hash_capacity / 4 + m->hash_capacity / 8;
-  if (AListLength(&m->elements) >= limit) {
+  if (LListLength(&m->elements) >= limit) {
     rehash(m);
   }
 }
@@ -136,153 +133,198 @@ HMap* HMapCreate(HMap* map, int element_size)
     assert(m != NULL);
   }
 
-  AListCreate(&m->elements, ELEMENT_SIZE(element_size), 0);
+  LListCreate(&m->elements, ELEMENT_SIZE(element_size));
   m->hash_capacity = 0;
   m->hash_map =  NULL;
 
   return (HMap*) m;
 }
 
-void HMapClear(HMap* map)
+void HMapClear(HMap* map, HMapOp free_op, void* passthrough)
 {
   assert(map != NULL);
   struct _HMap* m = (struct _HMap*) map;
-  int len = AListLength(&m->elements);
-  int i;
-  for (i = 0; i < len; i++) {
-    struct Element* e = AListGet(&m->elements, i, NULL);
+  int i = 0;
+  LListIt it;
+  struct Element* e = LListFirst(&m->elements, &it);
+  while (e != NULL) {
+    if (free_op != NULL) {
+      free_op(i, e->key, e->value, passthrough);
+    }
     free((void*)e->key);
+    i++;
+    e = LListNext(&it);
   }
-  AListClear2(&m->elements);
+  LListClear2(&m->elements);
   free(m->hash_map);
   m->hash_map = NULL;
   m->hash_capacity = 0;
+}
+
+void HMapClear2(HMap* map)
+{
+  HMapClear(map, NULL, NULL);
 }
 
 int HMapLength(HMap* map)
 {
   assert(map != NULL);
   struct _HMap* m = (struct _HMap*) map;
-  return AListLength(&m->elements);
+  return LListLength(&m->elements);
 }
 
-const char* HMapGetKey(HMap* map, int i)
-{
-  assert(map != NULL);
-  struct _HMap* m = (struct _HMap*) map;
-  struct Element* el = AListGet(&m->elements, i, NULL);
-  return el->key;
-}
-
-void* HMapGetValue(HMap* map, int i, void* element)
-{
-  assert(map != NULL);
-  struct _HMap* m = (struct _HMap*) map;
-  struct Element* el = AListGet(&m->elements, i, NULL);
-
-  if (element != NULL) {
-    memcpy(element, &el->value, DATA_SIZE(AListElementSize(&m->elements)));
-  }
-
-  return &el->value;
-}
-
-int HMapPut2(HMap* map, const char* key, void* element, int* overwritten)
+void* HMapPut(HMap* map, const char* key, void* element, void* previous)
 {
   assert(map != NULL);
   assert(key != NULL);
+  assert(element != NULL);
 
   struct _HMap* m = (struct _HMap*) map;
 
   grow(m);
 
-  int element_size = AListElementSize(&m->elements);
+  int element_size = LListElementSize(&m->elements);
   int hash = hash_function(key);
+
   int slot;
   if (find_slot(m, key, hash, &slot)) {
     /* key is already in the map */
-    struct Element* e = AListGet(&m->elements, m->hash_map[slot], NULL);
-    if (element != NULL) {
-      memcpy(&e->value, element, DATA_SIZE(element_size));
+    struct Element* e = m->hash_map[slot];
+    if (previous != NULL) {
+      memcpy(previous, e->value, DATA_SIZE(element_size));
     }
-    *overwritten = 1;
+    memcpy(e->value, element, DATA_SIZE(element_size));
   }
   else {
     /* key is not in the map */
     struct Element* e = alloca(element_size);
-    e->key = strdup(key);
     e->hash = hash;
-    if (element != NULL) {
-      memcpy(&e->value, element, DATA_SIZE(element_size));
+    e->key = strdup(key);
+    memcpy(e->value, element, DATA_SIZE(element_size));
+
+    if (previous != NULL) {
+      memset(previous, 0, DATA_SIZE(element_size));
     }
-    int i = AListLength(&m->elements);
-    AListAppend(&m->elements, e);
-    m->hash_map[slot] = i;
-    *overwritten = 0;
+
+    m->hash_map[slot] = LListAppend(&m->elements, e);
   }
-  return m->hash_map[slot];
+  return m->hash_map[slot]->value;
 }
 
-int HMapPut(HMap* map, const char* key, void* element)
-{
-  int overwritten;
-  int index = HMapPut2(map, key, element, &overwritten);
-  return index;
-}
-
-int HMapPutUnlessPresent(HMap* map, const char* key, void* element)
+void* HMapPutUnlessPresent(HMap* map, const char* key, void* element)
 {
   assert(map != NULL);
   assert(key != NULL);
+  assert(element != NULL);
 
   struct _HMap* m = (struct _HMap*) map;
 
   grow(m);
 
-  int element_size = AListElementSize(&m->elements);
+  int element_size = LListElementSize(&m->elements);
   int hash = hash_function(key);
+
   int slot;
-  if (find_slot(m, key, hash, &slot)) {
-    /* key is already in the map */
-    return -1;
-  }
-  else {
+  if (!find_slot(m, key, hash, &slot)) {
     /* key is not in the map */
     struct Element* e = alloca(element_size);
-    e->key = strdup(key);
     e->hash = hash;
-    if (element != NULL) {
-      memcpy(&e->value, element, DATA_SIZE(element_size));
-    }
-    int i = AListLength(&m->elements);
-    AListAppend(&m->elements, e);
-    m->hash_map[slot] = i;
-    return m->hash_map[slot];
+    e->key = strdup(key);
+    memcpy(e->value, element, DATA_SIZE(element_size));
+
+    m->hash_map[slot] = LListAppend(&m->elements, e);
   }
+
+  return m->hash_map[slot]->value;
 }
 
-int HMapFind(HMap* map, const char* key, void* element)
+void* HMapFind(HMap* map, const char* key, void* element)
 {
   assert(map != NULL);
   assert(key != NULL);
 
   struct _HMap* m = (struct _HMap*) map;
   if (m->hash_capacity == 0) {
-  	return -1;
+  	return NULL;
   }
 
   int hash = hash_function(key);
   int slot;
-
   if (find_slot(m, key, hash, &slot)) {
     /* key is found */
+    struct Element* e = m->hash_map[slot];
     if (element != NULL) {
-      struct Element* e = AListGet(&m->elements, m->hash_map[slot], NULL);
-      memcpy(element, &e->value, DATA_SIZE(AListElementSize(&m->elements)));
+      memcpy(element, e->value, DATA_SIZE(LListElementSize(&m->elements)));
     }
-    return m->hash_map[slot];
+    return e->value;
   }
-  else {
-    return -1;
+
+  return NULL;
+}
+
+struct _HMapIt {
+  LListIt lit;
+};
+
+void* HMapFirst(HMap* map, HMapIt* it, HMapPair* pair)
+{
+  assert(sizeof(struct _HMapIt) <= sizeof(HMapIt));
+  assert(map != NULL);
+  assert(it != NULL);
+
+  struct _HMap* m = (struct _HMap*) map;
+  struct _HMapIt* mit = (struct _HMapIt *) it;
+
+  struct Element* e = LListFirst(&m->elements, &mit->lit);
+
+  if (e != NULL) {
+    if (pair != NULL) {
+      pair->key = e->key;
+      pair->element = e->value;
+    }
+
+    return e->value;
   }
+
+  return NULL;
+}
+
+void* HMapNext(HMapIt* it, HMapPair* pair)
+{
+  assert(it != NULL);
+
+  struct _HMapIt* mit = (struct _HMapIt *) it;
+  struct Element* e = LListNext(&mit->lit);
+
+  if (e != NULL) {
+    if (pair != NULL) {
+      pair->key = e->key;
+      pair->element = e->value;
+    }
+
+    return e->value;
+  }
+
+  return NULL;
+}
+
+void* HMapData(HMapIt* it, HMapPair* pair)
+{
+  assert(it != NULL);
+  struct _HMapIt* mit = (struct _HMapIt *) it;
+  struct Element* e = LListData(&mit->lit, NULL);
+
+  if (pair != NULL) {
+    pair->key = e->key;
+    pair->element = e->value;
+  }
+
+  return e->value;
+}
+
+int HMapEol(HMapIt* it)
+{
+  assert(it != NULL);
+  struct _HMapIt* mit = (struct _HMapIt *) it;
+  return LListEol(&mit->lit);
 }
