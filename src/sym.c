@@ -17,7 +17,7 @@ SymTab* SymTabNew(SymTab* st)
 void SymTabEnterScope(SymTab* st)
 {
   assert(st != NULL);
-  PMap* m = PMapNew(NULL);
+  PMap* m = PMapCreate(NULL);
   PListPush(&st->symbols, m);
 }
 

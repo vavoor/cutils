@@ -87,12 +87,12 @@ int PMapAddressAsHash(const char* s)
   return (int) h;
 }
 
-PMap* PMapNew(PMap* map)
+PMap* PMapCreate(PMap* map)
 {
-  return PMapNewCustomHash(map, PMapDefaultStringHash);
+  return PMapCreateCustomHash(map, PMapDefaultStringHash);
 }
 
-PMap* PMapNewCustomHash(PMap* map, int (*hash_function)(const char* key))
+PMap* PMapCreateCustomHash(PMap* map, int (*hash_function)(const char* key))
 {
   assert(hash_function != NULL);
 
@@ -317,7 +317,7 @@ Pair* PMapGetPair(PMap* map, const char* key)
   if (map->capacity == 0) {
     return NULL;
   }
-  
+
   int hv = map->hash_function(key);
   int i;
   if (find_slot(map, key, hv, &i)) {

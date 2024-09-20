@@ -36,18 +36,18 @@ int PMapAddressAsHash(const char* s);
 /*
  * Creates a new hash map. If map is not NULL, map is used as hash map, otherwise mempory
  * is allocated.
- * 
+ *
  * Example 1
  *   PMap m1;
- *   PMap m = PMapNew(&m1)
+ *   PMap m = PMapCreate(&m1)
  *   assert(p == m1;
- * 
+ *
  * Example 2
- *   PMap* m2 = PMapNew(NULL);
- * 
+ *   PMap* m2 = PMapCreate(NULL);
+ *
  */
-PMap* PMapNew(PMap* map);
-PMap* PMapNewCustomHash(PMap* map, int (*hash_function)(const char* key));
+PMap* PMapCreate(PMap* map);
+PMap* PMapCreateCustomHash(PMap* map, int (*hash_function)(const char* key));
 void PMapClear(PMap* map, void (*deleter)(void* data));
 int PMapCount(PMap* map);
 
@@ -75,12 +75,12 @@ int PMapIterate(PMap* map, int (*it)(int i, const char* key, void* data, void* p
 /*
  * Initializes iterator <it> to point at the first pair of the map.
  * Returns the first pair of the map.
- * 
+ *
  * Example:
- * 
+ *
  * void* iterator;
  * Pair* pair;
- * 
+ *
  * PMapFirst(map, &iterator);
  * while ((pair = PMapNext(map, &iterator)) != NULL) {
  *   ... do something with pair ...
@@ -109,14 +109,14 @@ Pair* PMapGetPair(PMap* map, const char* key);
  * Stores a copy of <s> in the map <syms> using <s> as key if not present already.
  * This function can be used to store strings exactly once.
  * Returns the key of <s>.
- * 
+ *
  * Example
- * 
+ *
  * const char* s1 = Internalize(sysm, "hello"); // The two strings are not the same!
  * const char* s2 = Internalize(syms, "hello");
  * assert(s1 == s2); // Same pointer
  * assert(strcmp(s1, "hello") == 0);
- * 
+ *
  */
 const char* Internalize(PMap* syms, const char* s);
 
