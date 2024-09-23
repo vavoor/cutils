@@ -296,8 +296,9 @@ Pair* PMapNext(PMap* map, void** it)
   struct _PMapElement* e = (struct _PMapElement*) *it;
 
   if (e != NULL) {
-    *it = e->next;
-    return &e->pair;
+    e = e->next;
+    *it = e;
+    return e != NULL ? &e->pair : NULL;
   }
 
   return NULL;
