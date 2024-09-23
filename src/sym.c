@@ -4,13 +4,13 @@
 #include "sym.h"
 #include "pmap.h"
 
-SymTab* SymTabNew(SymTab* st)
+SymTab* SymTabCreate(SymTab* st)
 {
   if (st == NULL) {
     st = malloc(sizeof(SymTab));
     assert(st != NULL);
   }
-  PListNew(&st->symbols);
+  PListCreate(&st->symbols);
   return st;
 }
 

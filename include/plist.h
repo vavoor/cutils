@@ -10,7 +10,7 @@ typedef struct {
  * and must be deallocated by the user.
  * Returns <list> or the pointer to the newly allocated list.
  */
-PList* PListNew(PList* list);
+PList* PListCreate(PList* list);
 
 /*
  * Removes all elements from <list>. If <deleter> is not NULL, it will be called

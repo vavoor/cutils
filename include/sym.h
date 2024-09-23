@@ -7,7 +7,7 @@ typedef struct {
   PList symbols;
 } SymTab;
 
-SymTab* SymTabNew(SymTab* st);
+SymTab* SymTabCreate(SymTab* st);
 void SymTabEnterScope(SymTab* st);
 void SymTabLeaveScope(SymTab* st);
 void* SymTabInsert(SymTab* st, const char* key, void* data);

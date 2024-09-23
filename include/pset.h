@@ -7,7 +7,7 @@ typedef struct _PSet {
   void** elements;
 } PSet;
 
-PSet* PSetNew(PSet* set);
+PSet* PSetCreate(PSet* set);
 void PSetClear(PSet* set);
 int PSetSize(PSet* set);
 

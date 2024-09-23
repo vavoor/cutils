@@ -18,7 +18,7 @@ struct _PList {
   struct _PListElement** index;
 };
 
-PList* PListNew(PList* list)
+PList* PListCreate(PList* list)
 {
   assert(sizeof(PList) >= sizeof(struct _PList));
   struct _PList* l = (struct _PList*)list;
@@ -45,7 +45,7 @@ void PListAppend(PList* list, void* data)
 {
   assert(list != NULL);
   assert(data != NULL);
-  
+
   struct _PList* l = (struct _PList*) list;
 
   struct _PListElement* e = malloc(sizeof(struct _PListElement));
@@ -74,7 +74,7 @@ void PListPush(PList* list, void* data)
 {
   assert(list != NULL);
   assert(data != NULL);
-  
+
   struct _PList* l = (struct _PList*) list;
 
   struct _PListElement* e = malloc(sizeof(struct _PListElement));
@@ -102,7 +102,7 @@ void* PListPop(PList* list)
 {
   assert(list != NULL);
   struct _PList* l = (struct _PList*) list;
-  
+
   if (l->first != NULL) {
     struct _PListElement* e = l->first;
     l->first = e->next;
@@ -184,7 +184,7 @@ void* PListSet(PList* list, int idx, void* data)
 {
   assert(list != NULL);
   struct _PList* l = (struct _PList*) list;
-  
+
   create_index(l);
   if (0 <= idx && idx < l->count) {
     void* previous = l->index[idx]->data;
