@@ -233,8 +233,9 @@ void* PListNext(void** it)
   struct _PListElement* e = (struct _PListElement*) *it;
 
   if (e != NULL) {
-    *it = e->next;
-    return e->data;
+    e = e->next;
+    *it = e;
+    return e != NULL ? e->data : NULL;
   }
 
   return NULL;
