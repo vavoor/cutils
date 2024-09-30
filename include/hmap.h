@@ -82,7 +82,8 @@ void* HMapPut(HMap* map, const char* key, void* element, void* previous);
 
 /**
  * Inserts a key-value pair into the hash table unless the key is already present.
- * Returns the index of the inserted element or -1 if it has not been inserted.
+ * Returns the the pointer to the element in the array, which can be the newly
+ * inserted one or the previous one.
  */
 void* HMapPutUnlessPresent(HMap* map, const char* key, void* element);
 
