@@ -59,26 +59,24 @@ void JSONObjectAddProperty(JSON* json, const char* name, JSON* value)
 void JSONClear(JSON* json)
 {
   if (json != NULL) {
-    int len;
-    int i;
-    HMapIt it;
+    HMapIt mip;
     HMapPair pair;
+    LListIt lit;
+    JSON* j;
 
     switch (json->type) {
     case J_OBJECT:
-      for (HMapFirst(&json->object.properties, &it, &pair); !HMapEol(&it); HMapNext(&it, &pair)) {
-        JSON* j = pair.element;
+      for (HMapFirst(&json->object.properties, &mip, &pair); !HMapEol(&mip); HMapNext(&mip, &pair)) {
+        j = pair.element;
         JSONClear(j);
         HMapClear2(&json->object.properties);
       }
       break;
 
     case J_ARRAY:
-      len = AListLength(&json->array.elements);
-      for (i = 0; i < len; i++) {
-        JSON* j = AListGet(&json->array.elements, i, NULL);
+      for (j = LListFirst(&json->array.elements, &lit); j != NULL; j = LListNext(&lit)) {
         JSONClear(j);
-        AListClear2(&json->array.elements);
+        LListClear2(&json->array.elements);
       }
       break;
 
@@ -98,13 +96,13 @@ void JSONArrayCreate(JSON* json)
   assert(json != NULL);
 
   json->array.type = J_ARRAY;
-  AListCreate(&json->array.elements, sizeof(JSON), 0);
+  LListCreate(&json->array.elements, sizeof(JSON));
 }
 
 void JSONArrayAppend(JSON* json, JSON* element)
 {
   assert(json->type == J_ARRAY);
-  AListAppend(&json->array.elements, element);
+  LListAppend(&json->array.elements, element);
 }
 
 void JSONStringCreate(JSON* json, const char* value)
@@ -228,13 +226,13 @@ static int parse_array(JSON* json)
     if (!parse_value(&value)) {
       return 0;
     }
-    AListAppend(&json->array.elements, &value);
+    LListAppend(&json->array.elements, &value);
     while (*inp == ',') {
       consume();
       if (!parse_value(&value)) {
         return 0;
       }
-      AListAppend(&json->array.elements, &value);
+      LListAppend(&json->array.elements, &value);
     }
   }
 
@@ -388,14 +386,15 @@ static void dump_array(JSON* json, void (*writer)(int c, void* pt), void* pt, in
   writer('[', pt);
   indent++;
 
-  int len = AListLength(&json->array.elements);
   int i;
-  for (i = 0; i < len; i++) {
+  JSON* j;
+  LListIt lit;
+
+  for (i = 0, j = LListFirst(&json->array.elements, &lit); j != NULL; i++, j = LListNext(&lit)) {
     if (i > 0) {
       writer(',', pt);
     }
     writer('\n', pt);
-    JSON* j = AListGet(&json->array.elements, i, NULL);
     ind(indent, writer, pt);
     dump_value(j, writer, pt, indent);
   }

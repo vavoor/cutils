@@ -1,7 +1,7 @@
 #ifndef HEADER_f59a2dbf_ee40_47e2_a6b5_8b64df707acf
 #define HEADER_f59a2dbf_ee40_47e2_a6b5_8b64df707acf
 
-#include "alist.h"
+#include "llist.h"
 #include "hmap.h"
 
 enum { J_NONE, J_OBJECT, J_ARRAY, J_NUMBER, J_STRING, J_BOOLEAN };
@@ -15,7 +15,7 @@ typedef union JSON {
 
   struct JSONArray {
     int type;
-    AList elements;
+    LList elements;
   } array;
 
   struct JSONNumber {
